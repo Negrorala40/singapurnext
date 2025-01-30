@@ -60,14 +60,16 @@ const Menu: React.FC = () => {
   };
 
   const handleProductClick = (product: Product) => {
-    router.push({
-      pathname: '/product',
-      query: { product: JSON.stringify(product) },
-    });
+    const productQuery = encodeURIComponent(JSON.stringify(product));
+    router.push(`/product?product=${productQuery}`);
+  };
+
+  const handleViewAllClick = () => {
+    router.push('/menu');
   };
 
   return (
-    <div className={styles['menu-container']}>
+    <div className={`${styles['menu-container']} ${styles['menu-page']}`}>
       <div className={styles['filter-and-button-container']}>
         <div className={styles['filter-container']}>
           <label htmlFor="filter" className={styles['filter-label']}>Filtrar por:</label>
@@ -83,6 +85,9 @@ const Menu: React.FC = () => {
             <option value="Formal">Formal</option>
           </select>
         </div>
+        <button className={styles['view-all-button']} onClick={handleViewAllClick}>
+          Ver Todo
+        </button>
       </div>
 
       <div className={styles['product-grid']}>

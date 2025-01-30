@@ -63,8 +63,9 @@
     margin-bottom: 5px;
 }
 
-select,
-input[type="number"] {
+.size-selector select,
+.color-selector select,
+.quantity-selector input[type="number"] {
     padding: 8px;
     font-size: 16px;
     border: 1px solid #ddd;
@@ -72,8 +73,9 @@ input[type="number"] {
     width: 150px;
 }
 
-select:focus,
-input[type="number"]:focus {
+.size-selector select:focus,
+.color-selector select:focus,
+.quantity-selector input[type="number"]:focus {
     outline: none;
     border-color: #007bff;
 }
@@ -114,8 +116,9 @@ input[type="number"]:focus {
         align-items: center;
     }
 
-    select,
-    input[type="number"] {
+    .size-selector select,
+    .color-selector select,
+    .quantity-selector input[type="number"] {
         width: 120px;
     }
 }

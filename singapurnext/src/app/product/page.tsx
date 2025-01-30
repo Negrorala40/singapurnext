@@ -19,7 +19,7 @@ interface Product {
 }
 
 interface ProductProps {
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product & { size: string; color: string; quantity: number }) => void;
 }
 
 const Product: React.FC<ProductProps> = ({ addToCart }) => {
