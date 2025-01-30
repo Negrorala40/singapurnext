@@ -1,0 +1,18 @@
+/* Estilos para el footer */
+.footer {
+    background: #0a1828;
+    color: #178582;
+    box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.2);
+    backdrop-filter: 10px;
+    text-align: center;
+    padding: 1rem 0;
+    width: 100%; /* Asegura que ocupe todo el ancho */
+    position: relative; /* Asegura que el footer esté al final del contenido */
+    margin-top: auto; /* Empuja el footer hacia el fondo */
+}
+
+/* Estilo para el contenedor dentro del footer */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}

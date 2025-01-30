@@ -1,0 +1,98 @@
+/* Hero Section */
+.hero {
+    background: url('https://images.pexels.com/photos/33148/shoes-lebron-nike-spalding.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2') no-repeat center center/cover;
+    color: #fff;
+    text-align: center;
+    padding: 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 70vh;
+}
+
+.hero h2 {
+    font-size: 2.5rem;
+}
+
+.hero .btn-primary {
+    background: #f4d03f;
+    color: #1a1a1a;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.hero .btn-primary:hover {
+    background: #d4af37;
+}
+
+/* Layout for Destacados and Descuentos */
+.horizontal-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    padding: 2rem 0 0.5rem 0; /* Superior: 2rem, Inferior: 1rem, Izquierda y Derecha: 0 */
+    margin-top: calc(2.7rem); /* Ajusta el margen superior para que el contenido no quede debajo del header */
+}
+
+.destacados, .descuentos {
+    text-align: center;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-size: cover;
+    background-position: center;
+    height: 35vh;
+    color: white;
+    border: 0.5px solid #bfa181;
+}
+
+.destacados {
+    background-image: url('https://images.pexels.com/photos/33148/shoes-lebron-nike-spalding.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
+}
+
+.descuentos {
+    background-image: url('https://images.pexels.com/photos/33148/shoes-lebron-nike-spalding.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
+}
+
+.destacados h2, .descuentos h2 {
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.destacados p, .descuentos p {
+    color: #fff;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    .horizontal-container {
+        grid-template-columns: repeat(2, 1fr); /* Dos columnas horizontales */
+        gap: 10px;
+    }
+
+    .destacados, .descuentos {
+        height: 25vh; /* Ajusta la altura */
+    }
+}
+
+@media (max-width: 480px) {
+    .horizontal-container {
+        grid-template-columns: repeat(2, 1fr); /* Dos columnas horizontales */
+        gap: 10px;
+    }
+
+    .destacados, .descuentos {
+        height: 20vh; /* Ajusta la altura para pantallas pequeñas */
+    }
+
+    .hero h2 {
+        font-size: 2rem; /* Texto más pequeño en pantallas pequeñas */
+    }
+
+    .hero .btn-primary {
+        padding: 0.5rem 1rem;
+    }
+}
