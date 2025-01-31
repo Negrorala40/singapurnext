@@ -151,6 +151,35 @@ header, .header {
     color: #178582;
 }
 
+/*search*/
+
+input.search-input {
+    border-radius: 20px;
+    border: none;
+    width: 140px;
+
+}
+
+form {
+    border-radius: 20px;
+    border: none;
+    box-shadow: 2px 2px 2px 0 black;
+    background-color: white;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    align-self: center;
+    
+
+}
+
+button.search-submit-btn {
+    border-radius: 20px;
+    border: none;
+    height: 25px;
+    background-color: #178582;
+    margin-right: 3px;
+}
 /* Styles for btn-cart and cart-overlay */
 
 /* Botón del carrito */
