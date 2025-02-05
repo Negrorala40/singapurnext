@@ -5,15 +5,16 @@ body {
     background-color: #f4f4f4;
 }
 
-.login-container {
+.loginContainer {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #f4f4f4;
+    padding: 1rem;
 }
 
-.form-container {
+.formContainer {
     background-color: #1a1a1a;
     color: #fff;
     padding: 2rem;
@@ -24,24 +25,25 @@ body {
     text-align: center;
 }
 
-.form-container h2 {
+.formContainer h2 {
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
     color: #f4d03f;
 }
 
-.form-group {
-    margin-bottom: 1rem;
+.formGroup {
+    margin-bottom: 1.5rem;
     text-align: left;
 }
 
-.form-group label {
+.formGroup label {
     display: block;
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
+    color: #f4d03f;
 }
 
-.form-group input {
+.formGroup input {
     width: 100%;
     padding: 0.5rem;
     border: 1px solid #ccc;
@@ -49,7 +51,7 @@ body {
     font-size: 1rem;
 }
 
-.btn-primary {
+.btnPrimary {
     background-color: #f4d03f;
     color: #1a1a1a;
     padding: 0.75rem 1.5rem;
@@ -57,27 +59,29 @@ body {
     border-radius: 5px;
     font-size: 1rem;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: background-color 0.3s ease;
+    width: 100%;
 }
 
-.btn-primary:hover {
+.btnPrimary:hover {
     background-color: #d4af37;
 }
 
-.toggle-text {
+.toggleText {
     margin-top: 1rem;
     font-size: 0.9rem;
+    color: #ccc;
 }
 
-.toggle-link {
+.toggleLink {
     color: #f4d03f;
     cursor: pointer;
     font-weight: bold;
     margin-left: 0.3rem;
     text-decoration: underline;
-    transition: color 0.3s;
+    transition: color 0.3s ease;
 }
 
-.toggle-link:hover {
+.toggleLink:hover {
     color: #d4af37;
 }

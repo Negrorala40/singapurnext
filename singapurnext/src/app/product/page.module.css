@@ -1,3 +1,4 @@
+
 .product {
     display: flex;
     flex-direction: row;
@@ -81,7 +82,7 @@
 }
 
 .btn-add-to-cart {
-    background-color: #28a745;
+    background-color: #178282;
     color: #fff;
     padding: 12px 20px;
     font-size: 18px;
@@ -92,7 +93,7 @@
 }
 
 .btn-add-to-cart:hover {
-    background-color: #218838;
+    background-color: #2a9d8f;
 }
 
 @media (max-width: 768px) {

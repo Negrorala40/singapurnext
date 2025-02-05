@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import Header from './components/Header'; // Importa el componente Header
 import Home from './home/page'; // Importa el componente Home
-import Menu from './menu/page'; // Importa el componente Menu
+
 import Footer from './components/Footer'; // Importa el componente Footer
+import Menu from './components/Menu';
 
 const Page: React.FC = () => {
   const [cartItems, setCartItems] = useState<any[]>([]); // Tu estado de ejemplo
