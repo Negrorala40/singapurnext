@@ -19,16 +19,14 @@ const Home = () => {
                     </section>
 
                     {/* Sección Descuentos */}
-                    <section id="descuentos" className={styles.descuentos}>
-                        <div className="container">
-                            <h2>
-                                <Link href="/Menu?filter=descuento" className="link-descuentos">
-                                    Descuentos
-                                </Link>
-                            </h2>
-                            <p>Aprovecha nuestras ofertas especiales.</p>
-                        </div>
-                    </section>
+                    <Link href="/menu?filter=descuento" className={styles['link-completo']}>
+                        <section id="descuentos" className={styles.descuentos}>
+                            <div className="container">
+                                <h2>Descuentos</h2>
+                                <p>Aprovecha nuestras ofertas especiales.</p>
+                            </div>
+                        </section>
+                    </Link>
                 </div>
             </main>
         </div>

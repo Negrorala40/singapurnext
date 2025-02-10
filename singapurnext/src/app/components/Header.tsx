@@ -5,9 +5,15 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';  // Importa useRouter y usePathname
 import './Header.css'; // Importa el archivo CSS
 
+interface CartItem {
+  image: string;
+  name: string;
+  price: number;
+}
+
 interface HeaderProps {
-  cartItems?: { image: string, name: string, price: number }[];
-  setCartItems?: React.Dispatch<React.SetStateAction<{ image: string, name: string, price: number }[]>>;
+  cartItems?: CartItem[];
+  setCartItems?: React.Dispatch<React.SetStateAction<CartItem[]>>;
 }
 
 const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
@@ -26,6 +32,21 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
   const toggleSubmenu = (menu: string) => setSubmenuOpen(submenuOpen === menu ? null : menu);
   const toggleSearch = () => setSearchOpen(!searchOpen);
   const toggleCart = () => setCartOpen(!cartOpen);
+
+  // Cargar carrito desde localStorage
+  useEffect(() => {
+    const storedCart = JSON.parse(localStorage.getItem('cart') || '[]');
+    if (setCartItems) {
+      setCartItems(storedCart);
+    }
+  }, [setCartItems]);
+
+  useEffect(() => {
+    // Guardar carrito en localStorage cada vez que cambie
+    if (setCartItems) {
+      localStorage.setItem('cart', JSON.stringify(cartItems));
+    }
+  }, [cartItems]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -48,9 +69,10 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
   const handleSearchSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/menu?search=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery('');
-      setSearchOpen(false);
+      // Redirigir al menú con el parámetro de búsqueda
+      router.push(`/menu?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');  // Limpiar el campo de búsqueda
+      setSearchOpen(false);  // Cerrar la búsqueda
     }
   };
 
@@ -70,6 +92,14 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
       totalPrice: totalPrice.toString()
     }).toString();
     router.push(`/checkout?${query}`);
+  };
+
+  // Función para agregar un producto al carrito
+  const addToCart = (product: CartItem) => {
+    const updatedCart = [...cartItems, product];
+    if (setCartItems) {
+      setCartItems(updatedCart);
+    }
   };
 
   return (

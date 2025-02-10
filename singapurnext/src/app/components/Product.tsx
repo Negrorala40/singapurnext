@@ -1,17 +1,15 @@
-// Product.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation'; // Para obtener los parámetros de la URL
-import { products } from '../../../public/data/product'; // Asegúrate de importar los productos
-import styles from '../product/page.module.css'; // El archivo de estilos
+import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { products } from '../../../public/data/product';
+import styles from '../product/page.module.css';
 
 const Product: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const productId = searchParams.get('id'); // Obtenemos el id del producto desde la URL
+  const productId = searchParams.get('id');
   
-  // Buscar el producto por ID en el array de productos
   const product = products.find(p => p.product_id === productId);
 
   if (!product) {
@@ -36,8 +34,23 @@ const Product: React.FC = () => {
 
   const handleAddToCart = () => {
     if (selectedSize && selectedColor) {
-      // Aquí agregaríamos el producto al carrito (supuesto)
-      console.log('Producto agregado al carrito', { ...product, selectedSize, selectedColor, quantity });
+      // Crear el objeto del producto con las opciones seleccionadas
+      const cartItem = { ...product, selectedSize, selectedColor, quantity };
+
+      // Obtener el carrito del localStorage
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+
+      // Añadir el nuevo producto al carrito
+      cart.push(cartItem);
+
+      // Guardar el carrito actualizado en localStorage
+      localStorage.setItem('cart', JSON.stringify(cart));
+
+      // Redirigir al menú con los filtros actuales
+      const queryParams = new URLSearchParams(searchParams.toString()); // Usar los filtros actuales
+      router.push(`/menu?${queryParams.toString()}`); // Redirige a la página del menú con los filtros aplicados
+
+      alert('Producto agregado al carrito');
     } else {
       alert('Por favor selecciona talla y color');
     }
