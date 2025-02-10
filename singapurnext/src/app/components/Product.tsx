@@ -1,34 +1,20 @@
+// Product.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation'; // Importa los hooks useRouter y useSearchParams
-import styles from '../product/page.module.css'; // Importa el archivo CSS Modules
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation'; // Para obtener los parámetros de la URL
+import { products } from '../../../public/data/product'; // Asegúrate de importar los productos
+import styles from '../product/page.module.css'; // El archivo de estilos
 
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  discount: number;
-  category: string;
-  subcategory: string;
-  gender: string;
-  image: string;
-  sizes?: string[];
-  colors?: string[];
-  description?: string;
-}
-
-interface ProductProps {
-  addToCart: (product: Product & { size: string; color: string; quantity: number }) => void;
-}
-
-const Product: React.FC<ProductProps> = ({ addToCart }) => {
+const Product: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const product: Product = JSON.parse(searchParams.get('product') || '{}'); // Obtiene el producto desde los parámetros de búsqueda
+  const productId = searchParams.get('id'); // Obtenemos el id del producto desde la URL
+  
+  // Buscar el producto por ID en el array de productos
+  const product = products.find(p => p.product_id === productId);
 
-  // Verifica si el producto está disponible
-  if (!product || Object.keys(product).length === 0) {
+  if (!product) {
     return <p>Producto no encontrado. Por favor regresa al menú.</p>;
   }
 
@@ -50,12 +36,8 @@ const Product: React.FC<ProductProps> = ({ addToCart }) => {
 
   const handleAddToCart = () => {
     if (selectedSize && selectedColor) {
-      addToCart({
-        ...product,
-        size: selectedSize,
-        color: selectedColor,
-        quantity: quantity,
-      });
+      // Aquí agregaríamos el producto al carrito (supuesto)
+      console.log('Producto agregado al carrito', { ...product, selectedSize, selectedColor, quantity });
     } else {
       alert('Por favor selecciona talla y color');
     }
@@ -66,7 +48,7 @@ const Product: React.FC<ProductProps> = ({ addToCart }) => {
       <img src={product.image} alt={product.name} className={styles['product-image']} />
       <div className={styles['product-info']}>
         <h2>{product.name}</h2>
-        <p>{product.description || 'Sin descripción disponible.'}</p>
+        <p>{product.description}</p>
         <p className={styles['product-price']}>
           ${product.price.toLocaleString('es-CO')}
         </p>
@@ -76,7 +58,7 @@ const Product: React.FC<ProductProps> = ({ addToCart }) => {
             <label>Talla:</label>
             <select value={selectedSize} onChange={handleSizeChange}>
               <option value="">Selecciona una talla</option>
-              {product.sizes?.map((size) => (
+              {product.size.map((size) => (
                 <option key={size} value={size}>
                   {size}
                 </option>
@@ -88,7 +70,7 @@ const Product: React.FC<ProductProps> = ({ addToCart }) => {
             <label>Color:</label>
             <select value={selectedColor} onChange={handleColorChange}>
               <option value="">Selecciona un color</option>
-              {product.colors?.map((color) => (
+              {product.color.map((color) => (
                 <option key={color} value={color}>
                   {color}
                 </option>
@@ -103,6 +85,7 @@ const Product: React.FC<ProductProps> = ({ addToCart }) => {
               value={quantity}
               onChange={handleQuantityChange}
               min="1"
+              max={product.quantity} // Limitar según el stock disponible
             />
           </div>
         </div>
