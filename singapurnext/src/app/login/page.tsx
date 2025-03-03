@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
-import { users as initialUsers, User } from '../../../public/data/users'; // Datos iniciales de usuarios
+
+const API_URL = 'https://982a-190-109-4-228.ngrok-free.app/api/users';
 
 const Login = () => {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -15,12 +16,12 @@ const Login = () => {
     password: '',
     confirmPassword: '',
   });
-  const [users, setUsers] = useState<User[]>(initialUsers); // Usuarios en el estado
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams?.get('redirect') || '/';
 
-  // Cambiar entre iniciar sesión y registrar
+  // Cambiar entre registrar e iniciar sesión
   const toggleRegister = () => {
     setIsRegistering(!isRegistering);
     setFormData({
@@ -40,7 +41,7 @@ const Login = () => {
   };
 
   // Manejar envío del formulario
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (isRegistering && formData.password !== formData.confirmPassword) {
@@ -48,38 +49,38 @@ const Login = () => {
       return;
     }
 
-    if (isRegistering) {
-      // Registrar el nuevo usuario (en el estado)
-      const newUser: User = {
-        user_id: Math.random().toString(36).substring(7), // Crear un ID aleatorio
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        password: formData.password,
-        google_authenticator_secret: "JBSWY3DPEHPK3PXP", // Si se usa Google Authenticator
-        is_google_auth_enabled: true,
-        address: {
-          street: "Calle Principal 123",
-          city: "Madrid"
-        }
-      };
-      // Actualizamos el estado con el nuevo usuario
-      setUsers([...users, newUser]);
-      console.log('Usuario registrado:', newUser);
-      alert('Usuario registrado exitosamente');
-    } else {
-      // Login: Verificar si el usuario existe
-      const user = users.find((user) => user.email === formData.email && user.password === formData.password);
+    try {
+      const endpoint = isRegistering ? `${API_URL}` : `${API_URL}`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+        }),
+      });
 
-      if (user) {
-        // Usuario encontrado, redirigir a la página de destino
-        console.log('Usuario autenticado:', user);
-        router.push(redirectUrl);
-      } else {
-        // Usuario no encontrado
-        alert('Correo electrónico o contraseña incorrectos');
+      if (!response.ok) {
+        throw new Error(isRegistering ? 'Error al registrar usuario' : 'Credenciales incorrectas');
       }
+
+      const data = await response.json();
+      console.log(isRegistering ? 'Usuario registrado:' : 'Usuario autenticado:', data);
+
+      if (!isRegistering) {
+        localStorage.setItem('token', data.token); // Guardar token si es login
+        router.push(redirectUrl); // Redirigir a la página de inicio
+      } else {
+        alert('Usuario registrado exitosamente');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert(isRegistering ? 'No se pudo registrar el usuario' : 'Correo electrónico o contraseña incorrectos');
     }
   };
 
