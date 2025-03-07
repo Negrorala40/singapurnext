@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 
-const API_URL = 'https://982a-190-109-4-228.ngrok-free.app/api/users';
+const API_URL = 'http://localhost:8082';
 
 const Login = () => {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -50,7 +50,7 @@ const Login = () => {
     }
 
     try {
-      const endpoint = isRegistering ? `${API_URL}` : `${API_URL}`;
+      const endpoint = isRegistering ? `${API_URL}/api/addresses` : `${API_URL}`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -77,6 +77,7 @@ const Login = () => {
         router.push(redirectUrl); // Redirigir a la página de inicio
       } else {
         alert('Usuario registrado exitosamente');
+        setIsRegistering(false); // Cambiar a login después de registrar
       }
     } catch (error) {
       console.error('Error:', error);

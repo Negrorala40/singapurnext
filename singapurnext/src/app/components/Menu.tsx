@@ -1,74 +1,109 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation'; // Importa useRouter y useSearchParams
-import styles from '../menu/page.module.css'; // Importa el archivo CSS Modules
-import { products } from '../../../public/data/product'; // Importa los productos desde el archivo JSON
+import { useRouter, useSearchParams } from 'next/navigation';
+import axios from 'axios';
+import styles from '../menu/page.module.css';
+
+interface ProductVariant {
+  id: number;
+  color: string;
+  size: string;
+  stock: number;
+}
+
+interface Img {
+  id: number;
+  fileName: string;
+  fileType: string;
+  data: string; // Base64
+}
 
 interface Product {
-  product_id: string;
+  id: number;
   name: string;
   price: number;
   discount: number;
   category: string;
-  image: string;
-  size: string[];
-  color: string[];
-  gender: string; // 'hombre' o 'mujer'
-  subcategory: string; // 'superior', 'inferior', o 'calzado'
+  gender: string;
+  subcategory: string;
   description?: string;
+  variants: ProductVariant[];
+  images: Img[];
 }
 
 const Menu: React.FC = () => {
   const router = useRouter();
-  const searchParams = useSearchParams(); // Hook para obtener parámetros de búsqueda en la URL
+  const searchParams = useSearchParams();
 
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Leer los parámetros de búsqueda desde la URL
-  const searchQuery = searchParams.get('search') || '';
-  const genderQuery = searchParams.get('gender') || ''; // Filtro por género
-  const subcategoryQuery = searchParams.get('subcategory') || ''; // Filtro por subcategoría
+  // URL del backend
+  const API_URL = 'http://localhost:8080/api/products';
 
+  // Cargar productos desde el backend
   useEffect(() => {
-    // Filtrar productos según `gender`, `subcategory`, categoría seleccionada y búsqueda
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(API_URL);
+        const transformedProducts = response.data.map((product: Product) => ({
+          ...product,
+          images: product.images.map((img) => ({
+            ...img,
+            data: `data:${img.fileType};base64,${img.data}`,
+          })),
+        }));
+        setProducts(transformedProducts);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error al cargar los productos:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const searchQuery = searchParams.get('search') || '';
+  const genderQuery = searchParams.get('gender') || '';
+  const subcategoryQuery = searchParams.get('subcategory') || '';
+
+  // Filtrar productos según los parámetros de búsqueda y categoría seleccionada
+  useEffect(() => {
     const filtered = products.filter((product) => {
-      const matchesGender =
-        !genderQuery || product.gender.toLowerCase() === genderQuery.toLowerCase(); // Coincide con el género
-
-      const matchesSubcategory =
-        !subcategoryQuery ||
-        product.subcategory.toLowerCase() === subcategoryQuery.toLowerCase(); // Coincide con la subcategoría
-
-      const matchesCategory =
-        selectedCategory === 'Todos' || product.category === selectedCategory; // Coincide con la categoría seleccionada
-
+      const matchesGender = !genderQuery || product.gender.toLowerCase() === genderQuery.toLowerCase();
+      const matchesSubcategory = !subcategoryQuery || product.subcategory.toLowerCase() === subcategoryQuery.toLowerCase();
+      const matchesCategory = selectedCategory === 'Todos' || product.category === selectedCategory;
       const matchesSearch =
-        !searchQuery || // Si no hay búsqueda, no filtrar por búsqueda
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) || // Coincide con el nombre
-        (product.description &&
-          product.description.toLowerCase().includes(searchQuery.toLowerCase())); // Coincide con la descripción
+        !searchQuery ||
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
       return matchesGender && matchesSubcategory && matchesCategory && matchesSearch;
     });
 
     setFilteredProducts(filtered);
-  }, [selectedCategory, searchQuery, genderQuery, subcategoryQuery]); // Dependencias: actualiza cuando cambian `gender`, `subcategory`, categoría o búsqueda
+  }, [products, selectedCategory, searchQuery, genderQuery, subcategoryQuery]);
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(event.target.value);
   };
 
-  const handleProductClick = (productId: string) => {
+  const handleProductClick = (productId: number) => {
     router.push(`/product?id=${productId}`);
   };
 
   const handleViewAllClick = () => {
-    // Restablece los filtros y redirige a /menu sin parámetros adicionales
     setSelectedCategory('Todos');
     router.push('/menu');
   };
+
+  if (loading) {
+    return <p>Cargando productos...</p>;
+  }
 
   return (
     <div className={`${styles['menu-container']} ${styles['menu-page']}`}>
@@ -85,7 +120,6 @@ const Menu: React.FC = () => {
             <option value="Deportivo">Deportivo</option>
             <option value="Casual">Casual</option>
             <option value="Ropa">Ropa</option>
-            {/* Agrega más categorías si es necesario */}
           </select>
         </div>
         <button className={styles['view-all-button']} onClick={handleViewAllClick}>
@@ -99,11 +133,15 @@ const Menu: React.FC = () => {
         ) : (
           filteredProducts.map((product) => (
             <div
-              key={product.product_id}
+              key={product.id}
               className={styles['product-card']}
-              onClick={() => handleProductClick(product.product_id)}
+              onClick={() => handleProductClick(product.id)}
             >
-              <img src={product.image} alt={product.name} className={styles['product-image']} />
+              <img
+                src={product.images[0]?.data || '/placeholder.png'} // Mostrar imagen o placeholder si no hay
+                alt={product.name}
+                className={styles['product-image']}
+              />
               <div className={styles['product-details']}>
                 <h3 className={styles['product-name']}>{product.name}</h3>
                 <p className={styles['product-price']}>
@@ -114,6 +152,14 @@ const Menu: React.FC = () => {
                     Descuento: {Math.round(product.discount * 100)}%
                   </p>
                 )}
+                <div className={styles['variant-info']}>
+                  <p className={styles['product-variants']}>
+                    Colores: {product.variants.map((v) => v.color).join(', ')}
+                  </p>
+                  <p className={styles['product-variants']}>
+                    Tallas: {product.variants.map((v) => v.size).join(', ')}
+                  </p>
+                </div>
               </div>
             </div>
           ))

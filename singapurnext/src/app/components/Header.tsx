@@ -95,12 +95,12 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
   };
 
   // Función para agregar un producto al carrito
-  const addToCart = (product: CartItem) => {
-    const updatedCart = [...cartItems, product];
-    if (setCartItems) {
-      setCartItems(updatedCart);
-    }
-  };
+  // const addToCart = (product: CartItem) => {
+  //   const updatedCart = [...cartItems, product];
+  //   if (setCartItems) {
+  //     setCartItems(updatedCart);
+  //   }
+  // };
 
   return (
     <header className="header">
