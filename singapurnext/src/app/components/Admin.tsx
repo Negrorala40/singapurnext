@@ -37,10 +37,41 @@ const Admin = () => {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("Producto guardado:", { name, description, color, size, stock, gender, type, price, image });
+    
+        // Crear un FormData para enviar la imagen y los datos
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("description", description);
+        formData.append("color", color);
+        formData.append("size", size);
+        formData.append("stock", stock.toString());
+        formData.append("gender", gender);
+        formData.append("type", type);
+        formData.append("price", price.toString());
+        if (image) {
+            formData.append("image", image);
+        }
+    
+        try {
+            const response = await fetch("http://localhost:8082/api/products", {
+                method: "POST",
+                body: formData,
+            });
+    
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Producto guardado exitosamente:", data);
+                // Puedes limpiar los campos o mostrar un mensaje de éxito aquí
+            } else {
+                console.error("Error al guardar el producto:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error en la solicitud:", error);
+        }
     };
+    
 
     return (
         <div className={styles.container}>
