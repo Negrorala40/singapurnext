@@ -19,15 +19,25 @@ interface Img {
   data: string; // Base64
 }
 
+enum ProductGender {
+  MUJER = 'MUJER',
+  HOMBRE = 'HOMBRE',
+  UNISEX = 'UNISEX'
+}
+
+enum ProductType {
+  SUPERIOR = 'SUPERIOR',
+  INFERIOR = 'INFERIOR',
+  CALZADO = 'CALZADO'
+}
+
 interface Product {
   id: number;
   name: string;
+  description: string;
+  gender: ProductGender;
+  type: ProductType;
   price: number;
-  discount: number;
-  category: string;
-  gender: string;
-  subcategory: string;
-  description?: string;
   variants: ProductVariant[];
   images: Img[];
 }
@@ -42,14 +52,14 @@ const Menu: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   // URL del backend
-  const API_URL = 'http://localhost:8080/api/products';
+  const API_URL = 'http://localhost:8082/api/products';
 
   // Cargar productos desde el backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get(API_URL);
-        const transformedProducts = response.data.map((product: Product) => ({
+        const response = await axios.get<Product[]>(API_URL);
+        const transformedProducts = response.data.map((product) => ({
           ...product,
           images: product.images.map((img) => ({
             ...img,
@@ -69,24 +79,24 @@ const Menu: React.FC = () => {
 
   const searchQuery = searchParams.get('search') || '';
   const genderQuery = searchParams.get('gender') || '';
-  const subcategoryQuery = searchParams.get('subcategory') || '';
+  const typeQuery = searchParams.get('type') || '';
 
   // Filtrar productos según los parámetros de búsqueda y categoría seleccionada
   useEffect(() => {
     const filtered = products.filter((product) => {
       const matchesGender = !genderQuery || product.gender.toLowerCase() === genderQuery.toLowerCase();
-      const matchesSubcategory = !subcategoryQuery || product.subcategory.toLowerCase() === subcategoryQuery.toLowerCase();
-      const matchesCategory = selectedCategory === 'Todos' || product.category === selectedCategory;
+      const matchesType = !typeQuery || product.type.toLowerCase() === typeQuery.toLowerCase();
+      const matchesCategory = selectedCategory === 'Todos' || product.type === selectedCategory;
       const matchesSearch =
         !searchQuery ||
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        product.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-      return matchesGender && matchesSubcategory && matchesCategory && matchesSearch;
+      return matchesGender && matchesType && matchesCategory && matchesSearch;
     });
 
     setFilteredProducts(filtered);
-  }, [products, selectedCategory, searchQuery, genderQuery, subcategoryQuery]);
+  }, [products, selectedCategory, searchQuery, genderQuery, typeQuery]);
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(event.target.value);
@@ -117,9 +127,9 @@ const Menu: React.FC = () => {
             onChange={handleFilterChange}
           >
             <option value="Todos">Todos</option>
-            <option value="Deportivo">Deportivo</option>
-            <option value="Casual">Casual</option>
-            <option value="Ropa">Ropa</option>
+            <option value="SUPERIOR">Superior</option>
+            <option value="INFERIOR">Inferior</option>
+            <option value="CALZADO">Calzado</option>
           </select>
         </div>
         <button className={styles['view-all-button']} onClick={handleViewAllClick}>
@@ -147,19 +157,6 @@ const Menu: React.FC = () => {
                 <p className={styles['product-price']}>
                   ${product.price.toLocaleString('es-CO')}
                 </p>
-                {product.discount > 0 && (
-                  <p className={styles['product-discount']}>
-                    Descuento: {Math.round(product.discount * 100)}%
-                  </p>
-                )}
-                <div className={styles['variant-info']}>
-                  <p className={styles['product-variants']}>
-                    Colores: {product.variants.map((v) => v.color).join(', ')}
-                  </p>
-                  <p className={styles['product-variants']}>
-                    Tallas: {product.variants.map((v) => v.size).join(', ')}
-                  </p>
-                </div>
               </div>
             </div>
           ))

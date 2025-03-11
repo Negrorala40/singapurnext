@@ -12,58 +12,71 @@ const Admin = () => {
     const [gender, setGender] = useState("");
     const [type, setType] = useState("");
     const [price, setPrice] = useState(0);
-    const [image, setImage] = useState<File | null>(null);
+    const [fileName, setFileName] = useState("");
+    const [imageUrls, setImageUrls] = useState<string[]>([""]); // Múltiples URLs
 
-    // Estados para listas dinámicas
+    // Listas dinámicas
     const [colorOptions, setColorOptions] = useState<string[]>(["Negro", "Blanco", "Rojo"]);
     const [sizeOptions, setSizeOptions] = useState<string[]>(["S", "M", "L", "XL"]);
 
-    // Nuevas opciones a agregar
-    const [newColor, setNewColor] = useState("");
-    const [newSize, setNewSize] = useState("");
-
-    // Funciones para agregar nuevas opciones
-    const addColorOption = () => {
-        if (newColor.trim() && !colorOptions.includes(newColor.trim())) {
-            setColorOptions([...colorOptions, newColor.trim()]);
-            setNewColor("");
-        }
+    // Manejar cambios en las URLs de imágenes
+    const handleImageUrlChange = (index: number, value: string) => {
+        const newUrls = [...imageUrls];
+        newUrls[index] = value;
+        setImageUrls(newUrls);
     };
 
-    const addSizeOption = () => {
-        if (newSize.trim() && !sizeOptions.includes(newSize.trim())) {
-            setSizeOptions([...sizeOptions, newSize.trim()]);
-            setNewSize("");
-        }
+    // Agregar un campo para una nueva URL de imagen
+    const handleAddImageUrl = () => {
+        setImageUrls([...imageUrls, ""]);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-    
-        // Crear un FormData para enviar la imagen y los datos
-        const formData = new FormData();
-        formData.append("name", name);
-        formData.append("description", description);
-        formData.append("color", color);
-        formData.append("size", size);
-        formData.append("stock", stock.toString());
-        formData.append("gender", gender);
-        formData.append("type", type);
-        formData.append("price", price.toString());
-        if (image) {
-            formData.append("image", image);
-        }
-    
+
+        // Crear el JSON según el formato que me compartiste
+        const productData = {
+            name,
+            description,
+            gender,
+            type,
+            price,
+            variants: [
+                {
+                    color,
+                    size,
+                    stock,
+                },
+            ],
+            images: imageUrls.map((url, index) => ({
+                fileName: `${fileName}_${index + 1}.jpg`, // Nombre único para cada imagen
+                url,
+            })),
+        };
+
         try {
             const response = await fetch("http://localhost:8082/api/products", {
                 method: "POST",
-                body: formData,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(productData),
             });
-    
+
             if (response.ok) {
                 const data = await response.json();
                 console.log("Producto guardado exitosamente:", data);
-                // Puedes limpiar los campos o mostrar un mensaje de éxito aquí
+                // Limpiar los campos después de guardar
+                setName("");
+                setDescription("");
+                setColor("");
+                setSize("");
+                setStock(0);
+                setGender("");
+                setType("");
+                setPrice(0);
+                setFileName("");
+                setImageUrls([""]);
             } else {
                 console.error("Error al guardar el producto:", response.statusText);
             }
@@ -71,7 +84,6 @@ const Admin = () => {
             console.error("Error en la solicitud:", error);
         }
     };
-    
 
     return (
         <div className={styles.container}>
@@ -123,8 +135,8 @@ const Admin = () => {
                     className={styles.stockInput}
                     type="number"
                     placeholder="Stock"
-                    value={stock}
-                    onChange={(e) => setStock(parseInt(e.target.value))}
+                    value={stock.toString()}
+                    onChange={(e) => setStock(Number(e.target.value))}
                 />
 
                 <label className={styles.label}>Género:</label>
@@ -139,6 +151,15 @@ const Admin = () => {
                     <option value="UNISEX">UNISEX</option>
                 </select>
 
+                <label className={styles.label}>Tipo:</label>
+                <input
+                    className={styles.input}
+                    type="text"
+                    placeholder="Tipo (ej: SUPERIOR)"
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
+                />
+
                 <label className={styles.label}>Precio:</label>
                 <input
                     className={styles.priceInput}
@@ -148,41 +169,37 @@ const Admin = () => {
                     onChange={(e) => setPrice(parseFloat(e.target.value))}
                 />
 
-                <label className={styles.label}>Imagen:</label>
+                <label className={styles.label}>Nombre de la Imagen:</label>
                 <input
                     className={styles.input}
-                    type="file"
-                    onChange={(e) => setImage(e.target.files ? e.target.files[0] : null)}
+                    type="text"
+                    placeholder="Nombre de la imagen (ej: camiseta_negra.jpg)"
+                    value={fileName}
+                    onChange={(e) => setFileName(e.target.value)}
                 />
+
+                <label className={styles.label}>URL de las Imágenes:</label>
+                {imageUrls.map((url, index) => (
+                    <div key={index} className={styles.urlContainer}>
+                        <input
+                            className={styles.input}
+                            type="text"
+                            placeholder={`URL de la imagen ${index + 1}`}
+                            value={url}
+                            onChange={(e) => handleImageUrlChange(index, e.target.value)}
+                        />
+                    </div>
+                ))}
+                <button
+                    className={styles.addButton}
+                    type="button"
+                    onClick={handleAddImageUrl}
+                >
+                    Agregar otra URL
+                </button>
 
                 <button className={styles.button} type="submit">Guardar Producto</button>
             </form>
-
-            {/* Sección para agregar nuevas opciones de color */}
-            <div className={styles.optionContainer}>
-                <h4 className={styles.subtitle}>Agregar Nuevo Color</h4>
-                <input
-                    className={styles.input}
-                    type="text"
-                    placeholder="Nuevo Color"
-                    value={newColor}
-                    onChange={(e) => setNewColor(e.target.value)}
-                />
-                <button className={styles.addButton} onClick={addColorOption}>Agregar Color</button>
-            </div>
-
-            {/* Sección para agregar nuevas opciones de talla */}
-            <div className={styles.optionContainer}>
-                <h4 className={styles.subtitle}>Agregar Nueva Talla</h4>
-                <input
-                    className={styles.input}
-                    type="text"
-                    placeholder="Nueva Talla"
-                    value={newSize}
-                    onChange={(e) => setNewSize(e.target.value)}
-                />
-                <button className={styles.addButton} onClick={addSizeOption}>Agregar Talla</button>
-            </div>
         </div>
     );
 };

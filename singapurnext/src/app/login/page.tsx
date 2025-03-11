@@ -50,7 +50,7 @@ const Login = () => {
     }
 
     try {
-      const endpoint = isRegistering ? `${API_URL}/api/addresses` : `${API_URL}`;
+      const endpoint = isRegistering ? `${API_URL}/api/users` : `${API_URL}`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
