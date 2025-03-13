@@ -43,47 +43,57 @@ const Login = () => {
   // Manejar envío del formulario
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
+  
     if (isRegistering && formData.password !== formData.confirmPassword) {
       alert('Las contraseñas no coinciden');
       return;
     }
-
+  
+    console.log("Enviando", formData);
+  
     try {
-      const endpoint = isRegistering ? `${API_URL}/api/users` : `${API_URL}`;
+      const endpoint = isRegistering ? `${API_URL}/api/users` : `${API_URL}/api/auth/login`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
           email: formData.email,
-          phone: formData.phone,
           password: formData.password,
+          ...(isRegistering && {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phone: formData.phone,
+          }),
         }),
       });
-
+  
+      const data = await response.json(); // Aquí obtenemos la respuesta correctamente
+  
       if (!response.ok) {
-        throw new Error(isRegistering ? 'Error al registrar usuario' : 'Credenciales incorrectas');
+        throw new Error(data.message || 'Credenciales incorrectas'); // Ahora mostramos el error real
       }
-
-      const data = await response.json();
-      console.log(isRegistering ? 'Usuario registrado:' : 'Usuario autenticado:', data);
-
+  
       if (!isRegistering) {
-        localStorage.setItem('token', data.token); // Guardar token si es login
-        router.push(redirectUrl); // Redirigir a la página de inicio
+        const token = data.token; // Aquí extraemos el token del body
+        if (!token) {
+          throw new Error('No se recibió un token válido');
+        }
+  
+        localStorage.setItem('token', token);
+        router.push(redirectUrl);
       } else {
         alert('Usuario registrado exitosamente');
-        setIsRegistering(false); // Cambiar a login después de registrar
+        setIsRegistering(false);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert(isRegistering ? 'No se pudo registrar el usuario' : 'Correo electrónico o contraseña incorrectos');
+      alert(error.message);
     }
   };
+  
+  
 
   return (
     <div className={styles.loginContainer}>

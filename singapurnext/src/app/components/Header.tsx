@@ -1,14 +1,17 @@
-'use client'; // Indica que este es un Client Component
+'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';  // Importa useRouter y usePathname
-import './Header.css'; // Importa el archivo CSS
+import { useRouter, usePathname } from 'next/navigation';
+import './Header.css';
 
 interface CartItem {
   image: string;
   name: string;
   price: number;
+  size: string;
+  color: string;
+  quantity: number;
 }
 
 interface HeaderProps {
@@ -25,15 +28,14 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
   const menuRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
   const cartRef = useRef<HTMLDivElement | null>(null);
-  const router = useRouter();  // Usa useRouter de next/navigation
-  const pathname = usePathname(); // Obtiene la ruta actual
+  const router = useRouter();
+  const pathname = usePathname();
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const toggleSubmenu = (menu: string) => setSubmenuOpen(submenuOpen === menu ? null : menu);
   const toggleSearch = () => setSearchOpen(!searchOpen);
   const toggleCart = () => setCartOpen(!cartOpen);
 
-  // Cargar carrito desde localStorage
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem('cart') || '[]');
     if (setCartItems) {
@@ -42,7 +44,6 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
   }, [setCartItems]);
 
   useEffect(() => {
-    // Guardar carrito en localStorage cada vez que cambie
     if (setCartItems) {
       localStorage.setItem('cart', JSON.stringify(cartItems));
     }
@@ -69,10 +70,9 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
   const handleSearchSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (searchQuery.trim()) {
-      // Redirigir al menú con el parámetro de búsqueda
       router.push(`/menu?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');  // Limpiar el campo de búsqueda
-      setSearchOpen(false);  // Cerrar la búsqueda
+      setSearchQuery('');
+      setSearchOpen(false);
     }
   };
 
@@ -83,7 +83,16 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
     }
   };
 
-  const totalPrice = cartItems.reduce((total, item) => total + item.price, 0);
+  const updateQuantity = (index: number, quantity: number) => {
+    if (setCartItems) {
+      const updatedCart = cartItems.map((item, i) =>
+        i === index ? { ...item, quantity: Math.max(1, quantity) } : item
+      );
+      setCartItems(updatedCart);
+    }
+  };
+
+  const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
   const goToCheckout = () => {
     setCartOpen(false);
@@ -94,31 +103,17 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
     router.push(`/checkout?${query}`);
   };
 
-  // Función para agregar un producto al carrito
-  // const addToCart = (product: CartItem) => {
-  //   const updatedCart = [...cartItems, product];
-  //   if (setCartItems) {
-  //     setCartItems(updatedCart);
-  //   }
-  // };
-
   return (
     <header className="header">
       <div className="header-left">
-        <button className="btn btn-menu" onClick={toggleMenu}>
-          Menú
-        </button>
+        <button className="btn btn-menu" onClick={toggleMenu}>Menú</button>
         <Link href={`/login?redirect=${encodeURIComponent(pathname)}`} className="btn btn-login">
           Usuario
         </Link>
       </div>
       <Link href="/" className="logo">Singapur</Link>
       <div className="header-right">
-        {!searchOpen && (
-          <button className="btn btn-search" onClick={toggleSearch}>
-            Buscar
-          </button>
-        )}
+        {!searchOpen && <button className="btn btn-search" onClick={toggleSearch}>Buscar</button>}
         {searchOpen && (
           <div ref={searchRef} className="search-box">
             <form onSubmit={handleSearchSubmit}>
@@ -133,9 +128,7 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
             </form>
           </div>
         )}
-        <button className="btn btn-cart" onClick={toggleCart}>
-          Carrito
-        </button>
+        <button className="btn btn-cart" onClick={toggleCart}>Carrito</button>
       </div>
       {cartOpen && (
         <div ref={cartRef} className="cart-overlay">
@@ -148,7 +141,14 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
                   <img src={item.image} alt={item.name} />
                   <div>
                     <p>{item.name}</p>
+                    <p>Talla: {item.size}</p>
+                    <p>Color: {item.color}</p>
                     <p>${item.price.toFixed(2)}</p>
+                    <div className="quantity-selector">
+                      <button onClick={() => updateQuantity(index, item.quantity - 1)}>-</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => updateQuantity(index, item.quantity + 1)}>+</button>
+                    </div>
                   </div>
                   <button className="btn-remove" onClick={() => removeItem(index)}>Eliminar</button>
                 </li>
@@ -164,12 +164,7 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
       <div ref={menuRef} className={`menu ${menuOpen ? 'open' : ''}`}>
         <ul>
           <li>
-            <button
-              className="submenu-toggle"
-              onClick={() => toggleSubmenu('hombre')}
-            >
-              Hombre
-            </button>
+            <button className="submenu-toggle" onClick={() => toggleSubmenu('hombre')}>Hombre</button>
             <ul className={`submenu ${submenuOpen === 'hombre' ? 'open' : ''}`}>
               <li><Link href="/menu?gender=hombre&subcategory=superior">Superior</Link></li>
               <li><Link href="/menu?gender=hombre&subcategory=inferior">Inferior</Link></li>
@@ -177,12 +172,7 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
             </ul>
           </li>
           <li>
-            <button
-              className="submenu-toggle"
-              onClick={() => toggleSubmenu('mujer')}
-            >
-              Mujer
-            </button>
+            <button className="submenu-toggle" onClick={() => toggleSubmenu('mujer')}>Mujer</button>
             <ul className={`submenu ${submenuOpen === 'mujer' ? 'open' : ''}`}>
               <li><Link href="/menu?gender=mujer&subcategory=superior">Superior</Link></li>
               <li><Link href="/menu?gender=mujer&subcategory=inferior">Inferior</Link></li>

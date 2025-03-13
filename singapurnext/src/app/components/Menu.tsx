@@ -15,8 +15,7 @@ interface ProductVariant {
 interface Img {
   id: number;
   fileName: string;
-  fileType: string;
-  data: string; // Base64
+  imageUrl: string;
 }
 
 enum ProductGender {
@@ -59,14 +58,7 @@ const Menu: React.FC = () => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get<Product[]>(API_URL);
-        const transformedProducts = response.data.map((product) => ({
-          ...product,
-          images: product.images.map((img) => ({
-            ...img,
-            data: `data:${img.fileType};base64,${img.data}`,
-          })),
-        }));
-        setProducts(transformedProducts);
+        setProducts(response.data);
         setLoading(false);
       } catch (error) {
         console.error('Error al cargar los productos:', error);
@@ -148,7 +140,7 @@ const Menu: React.FC = () => {
               onClick={() => handleProductClick(product.id)}
             >
               <img
-                src={product.images[0]?.data || '/placeholder.png'} // Mostrar imagen o placeholder si no hay
+                src={product.images[0]?.imageUrl || '/placeholder.png'} // Usar la URL de la imagen
                 alt={product.name}
                 className={styles['product-image']}
               />

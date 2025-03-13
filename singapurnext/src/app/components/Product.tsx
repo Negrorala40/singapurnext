@@ -20,15 +20,25 @@ const Product: React.FC = () => {
   const [availableStock, setAvailableStock] = useState<number>(0);
 
   useEffect(() => {
-    if (!productId) return;
+    if (!productId) {
+      console.error('No se encontró productId en la URL');
+      setError('Producto no encontrado');
+      setLoading(false);
+      return;
+    }
+
+    console.log('Obteniendo producto con ID:', productId);
 
     const fetchProduct = async () => {
       try {
         const response = await fetch(`http://localhost:8082/api/products/${productId}`);
         if (!response.ok) throw new Error('Producto no encontrado');
+
         const data = await response.json();
+        console.log('Producto recibido:', data);
         setProduct(data);
       } catch (err: any) {
+        console.error('Error al obtener producto:', err.message);
         setError(err.message);
       }
     };
@@ -37,9 +47,12 @@ const Product: React.FC = () => {
       try {
         const response = await fetch(`http://localhost:8082/api/product-variants?productId=${productId}`);
         if (!response.ok) throw new Error('No se encontraron variantes del producto');
+
         const data = await response.json();
+        console.log('Variantes recibidas:', data);
         setVariants(data);
       } catch (err: any) {
+        console.error('Error al obtener variantes:', err.message);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -81,7 +94,7 @@ const Product: React.FC = () => {
   };
 
   if (loading) return <p>Cargando producto...</p>;
-  if (error) return <p>{error}</p>;
+  if (error) return <p style={{ color: 'red' }}>{error}</p>;
   if (!product) return <p>Producto no encontrado. Regresa al menú.</p>;
 
   const availableSizes = [...new Set(variants.map(v => v.size))];
