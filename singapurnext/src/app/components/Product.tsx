@@ -4,15 +4,37 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from '../product/page.module.css';
 
+interface Variant {
+  id: number;
+  color: string;
+  size: string;
+  stock: number;
+  productId: number;
+}
+
+interface Image {
+  imageUrl: string; // Ajustado para que coincida con el DTO ImgDTO
+}
+
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  gender: string;
+  type: string;
+  price: number;
+  images: Image[]; // Lista de imágenes según el backend
+  variants: Variant[]; // Lista de variantes disponibles
+}
+
 const Product: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get('id');
 
-  const [product, setProduct] = useState<any>(null);
-  const [variants, setVariants] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
 
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
@@ -21,38 +43,19 @@ const Product: React.FC = () => {
 
   useEffect(() => {
     if (!productId) {
-      console.error('No se encontró productId en la URL');
       setError('Producto no encontrado');
       setLoading(false);
       return;
     }
-
-    console.log('Obteniendo producto con ID:', productId);
 
     const fetchProduct = async () => {
       try {
         const response = await fetch(`http://localhost:8082/api/products/${productId}`);
         if (!response.ok) throw new Error('Producto no encontrado');
 
-        const data = await response.json();
-        console.log('Producto recibido:', data);
+        const data: Product = await response.json();
         setProduct(data);
       } catch (err: any) {
-        console.error('Error al obtener producto:', err.message);
-        setError(err.message);
-      }
-    };
-
-    const fetchVariants = async () => {
-      try {
-        const response = await fetch(`http://localhost:8082/api/product-variants?productId=${productId}`);
-        if (!response.ok) throw new Error('No se encontraron variantes del producto');
-
-        const data = await response.json();
-        console.log('Variantes recibidas:', data);
-        setVariants(data);
-      } catch (err: any) {
-        console.error('Error al obtener variantes:', err.message);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -60,15 +63,14 @@ const Product: React.FC = () => {
     };
 
     fetchProduct();
-    fetchVariants();
   }, [productId]);
 
   useEffect(() => {
-    if (selectedSize && selectedColor) {
-      const variant = variants.find(v => v.size === selectedSize && v.color === selectedColor);
+    if (selectedSize && selectedColor && product) {
+      const variant = product.variants.find(v => v.size === selectedSize && v.color === selectedColor);
       setAvailableStock(variant ? variant.stock : 0);
     }
-  }, [selectedSize, selectedColor, variants]);
+  }, [selectedSize, selectedColor, product]);
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => setSelectedSize(e.target.value);
   const handleColorChange = (e: React.ChangeEvent<HTMLSelectElement>) => setSelectedColor(e.target.value);
@@ -97,12 +99,16 @@ const Product: React.FC = () => {
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
   if (!product) return <p>Producto no encontrado. Regresa al menú.</p>;
 
-  const availableSizes = [...new Set(variants.map(v => v.size))];
-  const availableColors = [...new Set(variants.map(v => v.color))];
+  // Filtrar solo las tallas y colores que están disponibles en el backend
+  const availableSizes = [...new Set(product.variants.filter(v => v.stock > 0).map(v => v.size))];
+  const availableColors = [...new Set(product.variants.filter(v => v.stock > 0).map(v => v.color))];
 
   return (
     <div className={styles.product}>
-      <img src={product.image} alt={product.name} className={styles['product-image']} />
+      {product.images?.length > 0 && (
+        <img src={product.images[0].imageUrl} alt={product.name} className={styles['product-image']} />
+      )}
+
       <div className={styles['product-info']}>
         <h2>{product.name}</h2>
         <p>{product.description}</p>
