@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Cookies from 'js-cookie';
 import styles from './page.module.css';
 
-const API_URL = 'http://localhost:8082';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8082';
 
-const Login = () => {
+const Login: React.FC = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -16,6 +17,8 @@ const Login = () => {
     password: '',
     confirmPassword: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,25 +35,27 @@ const Login = () => {
       password: '',
       confirmPassword: '',
     });
+    setErrorMessage('');
   };
 
   // Manejar cambios en los inputs
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = event.target;
-    setFormData({ ...formData, [id]: value });
+    setFormData(prevState => ({ ...prevState, [id]: value }));
   };
 
   // Manejar envío del formulario
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-  
+    setErrorMessage('');
+    setLoading(true);
+
     if (isRegistering && formData.password !== formData.confirmPassword) {
-      alert('Las contraseñas no coinciden');
+      setErrorMessage('Las contraseñas no coinciden');
+      setLoading(false);
       return;
     }
-  
-    console.log("Enviando", formData);
-  
+
     try {
       const endpoint = isRegistering ? `${API_URL}/api/users` : `${API_URL}/api/auth/login`;
       const response = await fetch(endpoint, {
@@ -68,112 +73,72 @@ const Login = () => {
           }),
         }),
       });
-  
-      const data = await response.json(); // Aquí obtenemos la respuesta correctamente
-  
+
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(data.message || 'Credenciales incorrectas'); // Ahora mostramos el error real
+        throw new Error(data.message || 'Error en la autenticación');
       }
-  
+
       if (!isRegistering) {
-        const token = data.token; // Aquí extraemos el token del body
+        const token = data.token;
         if (!token) {
           throw new Error('No se recibió un token válido');
         }
-  
+
         localStorage.setItem('token', token);
+        Cookies.set('token', token, { expires: 1, secure: true });
+
         router.push(redirectUrl);
       } else {
         alert('Usuario registrado exitosamente');
-        setIsRegistering(false);
+        toggleRegister();
       }
-    } catch (error) {
-      console.error('Error:', error);
-      alert(error.message);
+    } catch (error: any) {
+      setErrorMessage(error.message);
+    } finally {
+      setLoading(false);
     }
   };
-  
-  
 
   return (
     <div className={styles.loginContainer}>
       <div className={styles.formContainer}>
         <h2>{isRegistering ? 'Registrar Usuario' : 'Iniciar Sesión'}</h2>
+        {errorMessage && <p className={styles.errorText}>{errorMessage}</p>}
         <form onSubmit={handleSubmit}>
           {isRegistering && (
             <>
               <div className={styles.formGroup}>
                 <label htmlFor="firstName">Nombre</label>
-                <input
-                  type="text"
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  placeholder="Ingrese su nombre"
-                  required
-                />
+                <input type="text" id="firstName" value={formData.firstName} onChange={handleChange} required />
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="lastName">Apellido</label>
-                <input
-                  type="text"
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  placeholder="Ingrese su apellido"
-                  required
-                />
+                <input type="text" id="lastName" value={formData.lastName} onChange={handleChange} required />
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="phone">Teléfono</label>
-                <input
-                  type="tel"
-                  id="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="Ingrese su teléfono"
-                  required
-                />
+                <input type="tel" id="phone" value={formData.phone} onChange={handleChange} required />
               </div>
             </>
           )}
           <div className={styles.formGroup}>
             <label htmlFor="email">Correo Electrónico</label>
-            <input
-              type="email"
-              id="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Ingrese su correo"
-              required
-            />
+            <input type="email" id="email" value={formData.email} onChange={handleChange} required />
           </div>
           <div className={styles.formGroup}>
             <label htmlFor="password">Contraseña</label>
-            <input
-              type="password"
-              id="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Ingrese su contraseña"
-              required
-            />
+            <input type="password" id="password" value={formData.password} onChange={handleChange} required />
           </div>
           {isRegistering && (
             <div className={styles.formGroup}>
               <label htmlFor="confirmPassword">Confirmar Contraseña</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirme su contraseña"
-                required
-              />
+              <input type="password" id="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
             </div>
           )}
-          <button type="submit" className={styles.btnPrimary}>
-            {isRegistering ? 'Registrar' : 'Iniciar Sesión'}
+          <button type="submit" className={styles.btnPrimary} disabled={loading}>
+            {loading ? 'Cargando...' : isRegistering ? 'Registrar' : 'Iniciar Sesión'}
           </button>
         </form>
         <p className={styles.toggleText}>

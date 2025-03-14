@@ -1,17 +1,10 @@
-'use client'; // Esto asegura que el componente se ejecute del lado del cliente
+'use client';
 
-//import React, { useState } from 'react';
-//import Header from './components/Header'; // Importa el componente Header
-import Home from './home/page'; // Importa el componente Home
-
-//import Admin from './components/Admin';
-
-//import Footer from './components/Footer'; // Importa el componente Footer
+import React from 'react';
+import Home from './home/page'; // Asegúrate de que la ruta sea correcta
 import Menu from './components/Menu';
 
 const Page: React.FC = () => {
-  //const [cartItems, setCartItems] = useState<any[]>([]); // Tu estado de ejemplo
-
   return (
     <div>
       <Home />
@@ -20,4 +13,4 @@ const Page: React.FC = () => {
   );
 };
 
-export default Page; // Asegúrate de que el componente se exporte correctamente
+export default Page;

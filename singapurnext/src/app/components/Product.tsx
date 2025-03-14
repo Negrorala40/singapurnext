@@ -76,7 +76,7 @@ const Product: React.FC = () => {
   const handleColorChange = (e: React.ChangeEvent<HTMLSelectElement>) => setSelectedColor(e.target.value);
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => setQuantity(Number(e.target.value));
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!selectedSize || !selectedColor) {
       alert('Por favor selecciona talla y color');
       return;
@@ -85,15 +85,40 @@ const Product: React.FC = () => {
       alert('Cantidad seleccionada excede el stock disponible');
       return;
     }
-
-    const cartItem = { ...product, selectedSize, selectedColor, quantity };
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    cart.push(cartItem);
-    localStorage.setItem('cart', JSON.stringify(cart));
-
-    router.push('/menu');
-    alert('Producto agregado al carrito');
+  
+    const userId = localStorage.getItem('userId'); // Obtén el ID del usuario autenticado
+    if (!userId) {
+      alert('Usuario no identificado. Inicia sesión para agregar al carrito.');
+      return;
+    }
+  
+    const variant = product?.variants.find(v => v.size === selectedSize && v.color === selectedColor);
+    if (!variant) {
+      alert('Variante de producto no encontrada.');
+      return;
+    }
+  
+    try {
+      const response = await fetch('http://localhost:8082/api/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          userId: userId,
+          productVariantId: variant.id.toString(),
+          quantity: quantity.toString(),
+        }),
+      });
+  
+      const data = await response.text();
+      if (!response.ok) throw new Error(data);
+  
+      alert('Producto agregado al carrito con éxito.');
+      router.push('/menu'); // Redirigir al usuario
+    } catch (err: any) {
+      alert('Error al agregar al carrito: ' + err.message);
+    }
   };
+  
 
   if (loading) return <p>Cargando producto...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
