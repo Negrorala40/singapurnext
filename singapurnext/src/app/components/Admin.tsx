@@ -13,20 +13,14 @@ const Admin = () => {
     const [type, setType] = useState("");
     const [price, setPrice] = useState(0);
     const [fileName, setFileName] = useState("");
-    const [imageUrls, setImageUrls] = useState<string[]>([""]); // Múltiples URLs
+    const [imageUrls, setImageUrls] = useState<string[]>([""]);
 
-    // Listas dinámicas
-    const [colorOptions, setColorOptions] = useState<string[]>(["Negro", "Blanco", "Rojo"]);
-    const [sizeOptions, setSizeOptions] = useState<string[]>(["S", "M", "L", "XL"]);
-
-    // Manejar cambios en las URLs de imágenes
     const handleImageUrlChange = (index: number, value: string) => {
         const newUrls = [...imageUrls];
         newUrls[index] = value;
         setImageUrls(newUrls);
     };
 
-    // Agregar un campo para una nueva URL de imagen
     const handleAddImageUrl = () => {
         setImageUrls([...imageUrls, ""]);
     };
@@ -34,7 +28,6 @@ const Admin = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Crear el JSON según el formato que me compartiste
         const productData = {
             name,
             description,
@@ -49,7 +42,7 @@ const Admin = () => {
                 },
             ],
             images: imageUrls.map((url, index) => ({
-                fileName: `${fileName}_${index + 1}.jpg`, // Nombre único para cada imagen
+                fileName: `${fileName}_${index + 1}.jpg`,
                 url,
             })),
         };
@@ -66,7 +59,6 @@ const Admin = () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log("Producto guardado exitosamente:", data);
-                // Limpiar los campos después de guardar
                 setName("");
                 setDescription("");
                 setColor("");
@@ -107,28 +99,22 @@ const Admin = () => {
                 />
 
                 <label className={styles.label}>Color:</label>
-                <select
-                    className={styles.select}
+                <input
+                    className={styles.input}
+                    type="text"
+                    placeholder="Color"
                     value={color}
                     onChange={(e) => setColor(e.target.value)}
-                >
-                    <option value="">Seleccionar Color</option>
-                    {colorOptions.map((c, idx) => (
-                        <option key={idx} value={c}>{c}</option>
-                    ))}
-                </select>
+                />
 
                 <label className={styles.label}>Talla:</label>
-                <select
-                    className={styles.select}
+                <input
+                    className={styles.input}
+                    type="text"
+                    placeholder="Talla"
                     value={size}
                     onChange={(e) => setSize(e.target.value)}
-                >
-                    <option value="">Seleccionar Talla</option>
-                    {sizeOptions.map((s, idx) => (
-                        <option key={idx} value={s}>{s}</option>
-                    ))}
-                </select>
+                />
 
                 <label className={styles.label}>Stock:</label>
                 <input
@@ -152,13 +138,16 @@ const Admin = () => {
                 </select>
 
                 <label className={styles.label}>Tipo:</label>
-                <input
-                    className={styles.input}
-                    type="text"
-                    placeholder="Tipo (ej: SUPERIOR)"
+                <select
+                    className={styles.select}
                     value={type}
                     onChange={(e) => setType(e.target.value)}
-                />
+                >
+                    <option value="">Seleccionar Tipo</option>
+                    <option value="SUPERIOR">SUPERIOR</option>
+                    <option value="INFERIOR">INFERIOR</option>
+                    <option value="CALZADO">CALZADO</option>
+                </select>
 
                 <label className={styles.label}>Precio:</label>
                 <input
@@ -173,7 +162,7 @@ const Admin = () => {
                 <input
                     className={styles.input}
                     type="text"
-                    placeholder="Nombre de la imagen (ej: camiseta_negra.jpg)"
+                    placeholder="Nombre de la imagen"
                     value={fileName}
                     onChange={(e) => setFileName(e.target.value)}
                 />

@@ -55,14 +55,12 @@ const Login: React.FC = () => {
       setLoading(false);
       return;
     }
-
+ 
     try {
       const endpoint = isRegistering ? `${API_URL}/api/users` : `${API_URL}/api/auth/login`;
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
@@ -74,22 +72,37 @@ const Login: React.FC = () => {
         }),
       });
 
-      const data = await response.json();
+      // Leer la respuesta en texto y luego convertir a JSON
+      const responseText = await response.text();
+      console.log("Respuesta del servidor:", responseText);
+      const data = JSON.parse(responseText);
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en la autenticación');
-      }
+      if (!response.ok) throw new Error(data.message || 'Error en la autenticación');
 
       if (!isRegistering) {
-        const token = data.token;
-        if (!token) {
-          throw new Error('No se recibió un token válido');
-        }
+        const { token, roles } = data;
+        if (!token) throw new Error('No se recibió un token válido');
 
+        // ✅ Priorizar el rol de ADMIN si está presente
+        const role = roles.includes('ADMIN') ? 'ADMIN' : roles[0] || 'CUSTOMER';
+
+        // Eliminar el token anterior antes de guardar el nuevo
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        Cookies.remove('token');
+
+// Guardar el nuevo token
         localStorage.setItem('token', token);
+        localStorage.setItem('role', role);
         Cookies.set('token', token, { expires: 1, secure: true });
 
-        router.push(redirectUrl);
+
+        // ✅ Redirección según el rol
+        if (role === 'ADMIN') {
+          router.push('/admin');
+        } else {
+          router.push('/');
+        }
       } else {
         alert('Usuario registrado exitosamente');
         toggleRegister();
