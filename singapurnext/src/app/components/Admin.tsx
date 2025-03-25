@@ -7,16 +7,7 @@ import styles from "./Admin.module.css";
 const Admin = () => {
     const router = useRouter();
     const [role, setRole] = useState("");
-
-    useEffect(() => {
-        const storedRole = localStorage.getItem("role"); // Obtener rol desde localStorage
-        if (storedRole !== "ADMIN") {
-            router.push("/"); // Redirigir a "/" si no es ADMIN
-        } else {
-            setRole(storedRole);
-        }
-    }, []);
-
+    const [products, setProducts] = useState([]);
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [color, setColor] = useState("");
@@ -27,6 +18,37 @@ const Admin = () => {
     const [price, setPrice] = useState(0);
     const [fileName, setFileName] = useState("");
     const [imageUrls, setImageUrls] = useState<string[]>([""]);
+    const [editingProductId, setEditingProductId] = useState<number | null>(null);
+
+    useEffect(() => {
+        const storedRole = localStorage.getItem("role"); // Obtener rol desde localStorage
+        if (storedRole !== "ADMIN") {
+            router.push("/"); // Redirigir a "/" si no es ADMIN
+        } else {
+            setRole(storedRole);
+            fetchProducts(); // Fetch products if the role is ADMIN
+        }
+    }, []);
+
+    const fetchProducts = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch("http://localhost:8082/api/products", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setProducts(data);
+            } else {
+                console.error("Error al obtener los productos:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error en la solicitud:", error);
+        }
+    };
 
     const handleImageUrlChange = (index: number, value: string) => {
         const newUrls = [...imageUrls];
@@ -73,20 +95,30 @@ const Admin = () => {
         try {
             const token = localStorage.getItem("token");
 
-            const response = await fetch("http://localhost:8082/api/products", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify(productData),
-            });
+            const response = editingProductId 
+                ? await fetch(`http://localhost:8082/api/products/${editingProductId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(productData),
+                })
+                : await fetch("http://localhost:8082/api/products", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(productData),
+                });
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Producto guardado exitosamente:", data);
+                console.log(editingProductId ? "Producto actualizado:" : "Producto guardado exitosamente:", data);
+                fetchProducts(); // Refresh the product list after saving/updating the product
 
-                // Reiniciar los estados del formulario
+                // Reset form states
                 setName("");
                 setDescription("");
                 setColor("");
@@ -97,6 +129,7 @@ const Admin = () => {
                 setPrice(0);
                 setFileName("");
                 setImageUrls([""]);
+                setEditingProductId(null); // Reset editing ID
             } else {
                 console.error("Error al guardar el producto:", response.statusText);
             }
@@ -105,13 +138,49 @@ const Admin = () => {
         }
     };
 
+    const handleDelete = async (id: number) => {
+        const token = localStorage.getItem("token");
+        try {
+            const response = await fetch(`http://localhost:8082/api/products/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                console.log("Producto eliminado exitosamente");
+                fetchProducts(); // Refresh the product list after deletion
+            } else {
+                console.error("Error al eliminar el producto:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error en la solicitud:", error);
+        }
+    };
+
+    const handleEdit = (product: any) => {
+        // Populate the form with the selected product's data for editing
+        setName(product.name);
+        setDescription(product.description);
+        setColor(product.variants[0].color);
+        setSize(product.variants[0].size);
+        setStock(product.variants[0].stock);
+        setGender(product.gender);
+        setType(product.type);
+        setPrice(product.price);
+        setFileName(product.images[0]?.fileName || "");
+        setImageUrls(product.images.map((image: any) => image.imageUrl));
+        setEditingProductId(product.id); // Set product ID to enable PUT request
+    };
+
     if (role !== "ADMIN") {
         return null; // Evita que la página cargue si el usuario no es ADMIN
     }
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>Agregar Producto</h2>
+            <h2 className={styles.title}>{editingProductId ? "Editar Producto" : "Agregar Producto"}</h2>
             <form className={styles.form} onSubmit={handleSubmit}>
                 <label className={styles.label}>Nombre:</label>
                 <input className={styles.input} type="text" value={name} onChange={(e) => setName(e.target.value)} />
@@ -160,12 +229,20 @@ const Admin = () => {
                     Agregar otra URL
                 </button>
 
-                <button className={styles.button} type="submit">Guardar Producto</button>
+                <button className={styles.button} type="submit">{editingProductId ? "Actualizar Producto" : "Guardar Producto"}</button>
             </form>
-            <h2>Eliminar producto</h2>
-            <h2>Actualizar Producto</h2>
-            <h2>Agregar Administrador</h2>
 
+            <h2 className={styles.title}>Lista de Productos</h2>
+            <div className={styles.productList}>
+                {products.map((product) => (
+                    <div key={product.id} className={styles.productItem}>
+                        <h3>{product.name}</h3>
+                        <p>{product.description}</p>
+                        <button onClick={() => handleEdit(product)}>Editar</button>
+                        <button onClick={() => handleDelete(product.id)}>Eliminar</button>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };
