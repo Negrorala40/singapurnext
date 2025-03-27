@@ -55,7 +55,7 @@ const Login: React.FC = () => {
       setLoading(false);
       return;
     }
- 
+
     try {
       const endpoint = isRegistering ? `${API_URL}/api/users` : `${API_URL}/api/auth/login`;
       const response = await fetch(endpoint, {
@@ -72,16 +72,24 @@ const Login: React.FC = () => {
         }),
       });
 
-      // Leer la respuesta en texto y luego convertir a JSON
       const responseText = await response.text();
       console.log("Respuesta del servidor:", responseText);
-      const data = JSON.parse(responseText);
 
-      if (!response.ok) throw new Error(data.message || 'Error en la autenticación');
+      if (!response.ok) {
+        throw new Error('Error en la autenticación');
+      }
+
+      // Intentar parsear la respuesta JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (error) {
+        throw new Error('Respuesta no válida del servidor');
+      }
 
       if (!isRegistering) {
-        const { token, roles } = data;
-        if (!token) throw new Error('No se recibió un token válido');
+        const { token, roles, userId } = data;
+        if (!token || !userId) throw new Error('Datos de autenticación incompletos');
 
         // ✅ Priorizar el rol de ADMIN si está presente
         const role = roles.includes('ADMIN') ? 'ADMIN' : roles[0] || 'CUSTOMER';
@@ -89,20 +97,17 @@ const Login: React.FC = () => {
         // Eliminar el token anterior antes de guardar el nuevo
         localStorage.removeItem('token');
         localStorage.removeItem('role');
-        Cookies.remove('token');
+        localStorage.removeItem('userId');
 
-// Guardar el nuevo token
+        // Guardar los nuevos valores
         localStorage.setItem('token', token);
         localStorage.setItem('role', role);
+        localStorage.setItem('userId', String(userId));
+
         Cookies.set('token', token, { expires: 1, secure: true });
 
-
         // ✅ Redirección según el rol
-        if (role === 'ADMIN') {
-          router.push('/admin');
-        } else {
-          router.push('/');
-        }
+        router.push(role === 'ADMIN' ? '/admin' : '/');
       } else {
         alert('Usuario registrado exitosamente');
         toggleRegister();

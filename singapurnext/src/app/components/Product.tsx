@@ -89,7 +89,8 @@ const Product: React.FC = () => {
     }
   
     const token = localStorage.getItem('token');
-    if (!token) {
+    const userId = localStorage.getItem('userId');
+    if (!token || !userId) {
       alert('Usuario no identificado. Inicia sesión para agregar al carrito.');
       return;
     }
@@ -101,18 +102,16 @@ const Product: React.FC = () => {
     }
   
     try {
-      const response = await fetch('http://localhost:8082/api/cart/add', {
+      const response = await fetch(`http://localhost:8082/api/cart/add?userId=${userId}&productVariantId=${variant.id}&quantity=${quantity}`, { 
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 
-                    'Authorization': `Bearer ${token}`},
-        body: new URLSearchParams({
-          productVariantId: variant.id.toString(),
-          quantity: quantity.toString(),
-        }),
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
       });
   
-      const data = await response.text();
-      if (!response.ok) throw new Error(data);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Error desconocido');
   
       alert('Producto agregado al carrito con éxito.');
       router.push('/menu');
@@ -120,7 +119,7 @@ const Product: React.FC = () => {
       alert('Error al agregar al carrito: ' + err.message);
     }
   };  
-
+  
   if (loading) return <p>Cargando producto...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
   if (!product) return <p>Producto no encontrado. Regresa al menú.</p>;
