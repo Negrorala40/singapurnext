@@ -9,11 +9,12 @@ interface Variant {
   color: string;
   size: string;
   stock: number;
+  price: number;
   productId: number;
 }
 
 interface Image {
-  imageUrl: string; // Ajustado para que coincida con el DTO ImgDTO
+  imageUrl: string;
 }
 
 interface Product {
@@ -22,9 +23,8 @@ interface Product {
   description: string;
   gender: string;
   type: string;
-  price: number;
-  images: Image[]; // Lista de imágenes según el backend
-  variants: Variant[]; // Lista de variantes disponibles
+  images: Image[];
+  variants: Variant[];
 }
 
 const Product: React.FC = () => {
@@ -39,7 +39,7 @@ const Product: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
-  const [availableStock, setAvailableStock] = useState<number>(0);
+  const [availableStock, setAvailableStock] = useState<number | null>(null);
 
   useEffect(() => {
     if (!productId) {
@@ -68,7 +68,9 @@ const Product: React.FC = () => {
   useEffect(() => {
     if (selectedSize && selectedColor && product) {
       const variant = product.variants.find(v => v.size === selectedSize && v.color === selectedColor);
-      setAvailableStock(variant ? variant.stock : 0);
+      setAvailableStock(variant ? variant.stock : null);
+    } else {
+      setAvailableStock(null);
     }
   }, [selectedSize, selectedColor, product]);
 
@@ -81,13 +83,13 @@ const Product: React.FC = () => {
       alert('Por favor selecciona talla y color');
       return;
     }
-    if (quantity > availableStock) {
+    if (quantity > (availableStock || 0)) {
       alert('Cantidad seleccionada excede el stock disponible');
       return;
     }
   
-    const userId = localStorage.getItem('userId'); // Obtén el ID del usuario autenticado
-    if (!userId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
       alert('Usuario no identificado. Inicia sesión para agregar al carrito.');
       return;
     }
@@ -101,9 +103,9 @@ const Product: React.FC = () => {
     try {
       const response = await fetch('http://localhost:8082/api/cart/add', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 
+                    'Authorization': `Bearer ${token}`},
         body: new URLSearchParams({
-          userId: userId,
           productVariantId: variant.id.toString(),
           quantity: quantity.toString(),
         }),
@@ -113,18 +115,20 @@ const Product: React.FC = () => {
       if (!response.ok) throw new Error(data);
   
       alert('Producto agregado al carrito con éxito.');
-      router.push('/menu'); // Redirigir al usuario
+      router.push('/menu');
     } catch (err: any) {
       alert('Error al agregar al carrito: ' + err.message);
     }
-  };
-  
+  };  
 
   if (loading) return <p>Cargando producto...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
   if (!product) return <p>Producto no encontrado. Regresa al menú.</p>;
 
-  // Filtrar solo las tallas y colores que están disponibles en el backend
+  const minPrice = product.variants.length > 0
+    ? Math.min(...product.variants.map(v => v.price))
+    : 0;
+
   const availableSizes = [...new Set(product.variants.filter(v => v.stock > 0).map(v => v.size))];
   const availableColors = [...new Set(product.variants.filter(v => v.stock > 0).map(v => v.color))];
 
@@ -137,13 +141,13 @@ const Product: React.FC = () => {
       <div className={styles['product-info']}>
         <h2>{product.name}</h2>
         <p>{product.description}</p>
-        <p className={styles['product-price']}>${product.price.toLocaleString('es-CO')}</p>
+        <p className={styles['product-price']}>${minPrice.toLocaleString('es-CO')}</p>
 
         <div className={styles['product-options']}>
           <div className={styles['size-selector']}>
             <label>Talla:</label>
             <select value={selectedSize} onChange={handleSizeChange}>
-              <option value="">Selecciona una talla</option>
+              <option value="">Seleccione una talla</option>
               {availableSizes.map(size => (
                 <option key={size} value={size}>{size}</option>
               ))}
@@ -153,7 +157,7 @@ const Product: React.FC = () => {
           <div className={styles['color-selector']}>
             <label>Color:</label>
             <select value={selectedColor} onChange={handleColorChange}>
-              <option value="">Selecciona un color</option>
+              <option value="">Seleccione un color</option>
               {availableColors.map(color => (
                 <option key={color} value={color}>{color}</option>
               ))}
@@ -162,8 +166,14 @@ const Product: React.FC = () => {
 
           <div className={styles['quantity-selector']}>
             <label>Cantidad:</label>
-            <input type="number" value={quantity} onChange={handleQuantityChange} min="1" max={availableStock} />
-            <p>Stock disponible: {availableStock}</p>
+            <input type="number" value={quantity} onChange={handleQuantityChange} min="1" max={availableStock || 1} />
+            <p>
+              {selectedSize && selectedColor
+                ? availableStock !== null
+                  ? 'Disponible'
+                  : 'No disponible'
+                : 'Seleccione color y talla'}
+            </p>
           </div>
         </div>
 

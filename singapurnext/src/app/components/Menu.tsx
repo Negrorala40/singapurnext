@@ -147,8 +147,11 @@ const Menu: React.FC = () => {
               <div className={styles['product-details']}>
                 <h3 className={styles['product-name']}>{product.name}</h3>
                 <p className={styles['product-price']}>
-                  ${product.price.toLocaleString('es-CO')}
-                </p>
+                ${product.variants.length > 0 
+                  ? Math.min(...product.variants.map(v => Number(v.price || 0))).toLocaleString('es-CO') 
+                  : 'Precio no disponible'}
+              </p>
+
               </div>
             </div>
           ))

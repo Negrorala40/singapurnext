@@ -15,7 +15,7 @@ const Admin = () => {
     const [stock, setStock] = useState(0);
     const [gender, setGender] = useState("");
     const [type, setType] = useState("");
-    const [price, setPrice] = useState(0);
+    const [price, setPrice] = useState(0); // Precio de la variante
     const [fileName, setFileName] = useState("");
     const [imageUrls, setImageUrls] = useState<string[]>([""]);
     const [editingProductId, setEditingProductId] = useState<number | null>(null);
@@ -73,17 +73,18 @@ const Admin = () => {
         // Filtrar URLs de imágenes vacías
         const filteredImageUrls = imageUrls.filter(url => url.trim() !== "");
 
+        // Cambié el `price` de `productData` a `variants`
         const productData = {
             name,
             description,
             gender,
             type,
-            price,
             variants: [
                 {
                     color,
                     size,
                     stock,
+                    price, // El precio ahora es parte de la variante
                 },
             ],
             images: filteredImageUrls.map((url, index) => ({
@@ -168,7 +169,7 @@ const Admin = () => {
         setStock(product.variants[0].stock);
         setGender(product.gender);
         setType(product.type);
-        setPrice(product.price);
+        setPrice(product.variants[0].price); // Usar el precio de la variante
         setFileName(product.images[0]?.fileName || "");
         setImageUrls(product.images.map((image: any) => image.imageUrl));
         setEditingProductId(product.id); // Set product ID to enable PUT request
