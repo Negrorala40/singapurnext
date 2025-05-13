@@ -1,0 +1,140 @@
+.cart-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(255, 236, 239, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+    font-family: 'Comic Sans MS', 'Segoe UI', sans-serif;
+  }
+  
+  .cart-container {
+    background: #fffafc;
+    border: 5px dotted #f4d03f;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    height: 90%;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: #ffe3e3;
+    border: none;
+    font-size: 1.4rem;
+    color: #ff6b81;
+    cursor: pointer;
+    border-radius: 50%;
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .cart-container h2 {
+    text-align: center;
+    font-size: 1.6rem;
+    color: #ff6f61;
+    margin-bottom: 1rem;
+  }
+  
+  .cart-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+  .cart-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px dashed #ffe6e6;
+  }
+  
+  .cart-item img {
+    width: 60px;
+    height: 60px;
+    margin-right: 1rem;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+  
+  .cart-item div {
+    flex: 1;
+    font-size: 0.9rem;
+  }
+  
+  .quantity-selector {
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .quantity-selector button {
+    background: #fcd5ce;
+    border: none;
+    padding: 0.3rem 0.7rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  
+  .quantity-selector span {
+    font-weight: bold;
+  }
+  
+  .btn-remove {
+    background: #f67280;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-left: 0.5rem;
+    align-self: start;
+  }
+  
+  .cart-summary {
+    text-align: center;
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #fff0f5;
+    border-radius: 10px;
+  }
+  
+  .cart-summary p {
+    font-size: 1rem;
+    margin: 0.5rem 0;
+  }
+  
+  .btn-checkout {
+    background: #ffcccb;
+    border: none;
+    padding: 0.8rem;
+    width: 100%;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 15px;
+    cursor: pointer;
+    color: #333;
+    margin-top: 0.5rem;
+  }
+  
+  .btn-checkout:hover {
+    background: #ffc1c1;
+  }
+  

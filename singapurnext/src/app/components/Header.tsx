@@ -4,8 +4,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import './Header.css';
+import Cart from './Cart';
 
 interface CartItem {
+  id: string; // Asegúrate de que cada item tenga un ID único
   image: string;
   name: string;
   price: number;
@@ -14,17 +16,15 @@ interface CartItem {
   quantity: number;
 }
 
-interface HeaderProps {
-  cartItems?: CartItem[];
-  setCartItems?: React.Dispatch<React.SetStateAction<CartItem[]>>;
-}
+const API_URL = 'http://localhost:8082/api/cart';
 
-const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
+const Header: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [submenuOpen, setSubmenuOpen] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [cartOpen, setCartOpen] = useState(false);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
   const cartRef = useRef<HTMLDivElement | null>(null);
@@ -36,19 +36,82 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
   const toggleSearch = () => setSearchOpen(!searchOpen);
   const toggleCart = () => setCartOpen(!cartOpen);
 
-  useEffect(() => {
-    const storedCart = JSON.parse(localStorage.getItem('cart') || '[]');
-    if (setCartItems) {
-      setCartItems(storedCart);
-    }
-  }, [setCartItems]);
+  // Eliminar producto desde el carrito
+  const removeItem = async (itemId: string) => {
+    const userId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    if (setCartItems) {
-      localStorage.setItem('cart', JSON.stringify(cartItems));
+    if (!userId || !token) {
+      console.warn('Falta userId o token');
+      return;
     }
-  }, [cartItems]);
 
+    try {
+      const res = await fetch(`${API_URL}/remove/${itemId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error('Error al eliminar el producto');
+      }
+
+      // Eliminar del carrito en el estado local
+      const updatedCart = cartItems.filter(item => item.id !== itemId);
+      setCartItems(updatedCart);
+      
+    } catch (error) {
+      console.error('Error eliminando el producto del carrito:', error);
+    }
+  };
+
+  // Cargar los items del carrito desde el backend
+  useEffect(() => {
+    const fetchCartFromBackend = async () => {
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token');
+
+      if (!userId || !token) {
+        console.warn('Falta userId o token');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!res.ok) throw new Error('Error al obtener el carrito');
+        const data = await res.json();
+
+        // Adaptamos los datos del carrito
+        const adaptedCartItems = data.map((item: any) => ({
+          id: item.id, // Asegúrate de que cada producto tenga un id único
+          image: item.imageUrls[0] || '/default.png',
+          name: item.productName,
+          price: parseFloat(item.price),
+          size: item.size,
+          color: item.color,
+          quantity: item.quantity,
+        }));
+
+        setCartItems(adaptedCartItems);
+      } catch (error) {
+        console.error('Error cargando el carrito:', error);
+      }
+    };
+
+    fetchCartFromBackend();
+  }, []);
+
+  // Cerrar el carrito si se hace clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -76,29 +139,13 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
     }
   };
 
-  const removeItem = (index: number) => {
-    if (setCartItems) {
-      const updatedCart = cartItems.filter((_, i) => i !== index);
-      setCartItems(updatedCart);
-    }
-  };
-
-  const updateQuantity = (index: number, quantity: number) => {
-    if (setCartItems) {
-      const updatedCart = cartItems.map((item, i) =>
-        i === index ? { ...item, quantity: Math.max(1, quantity) } : item
-      );
-      setCartItems(updatedCart);
-    }
-  };
-
   const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
   const goToCheckout = () => {
     setCartOpen(false);
     const query = new URLSearchParams({
       cartItems: JSON.stringify(cartItems),
-      totalPrice: totalPrice.toString()
+      totalPrice: totalPrice.toString(),
     }).toString();
     router.push(`/checkout?${query}`);
   };
@@ -131,36 +178,15 @@ const Header: React.FC<HeaderProps> = ({ cartItems = [], setCartItems }) => {
         <button className="btn btn-cart" onClick={toggleCart}>Carrito</button>
       </div>
       {cartOpen && (
-        <div ref={cartRef} className="cart-overlay">
-          <div className="cart-container">
-            <button className="close-btn" onClick={toggleCart}>X</button>
-            <h2>Carrito de Compras</h2>
-            <ul className="cart-items">
-              {cartItems.map((item, index) => (
-                <li key={index} className="cart-item">
-                  <img src={item.image} alt={item.name} />
-                  <div>
-                    <p>{item.name}</p>
-                    <p>Talla: {item.size}</p>
-                    <p>Color: {item.color}</p>
-                    <p>${item.price.toFixed(2)}</p>
-                    <div className="quantity-selector">
-                      <button onClick={() => updateQuantity(index, item.quantity - 1)}>-</button>
-                      <span>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(index, item.quantity + 1)}>+</button>
-                    </div>
-                  </div>
-                  <button className="btn-remove" onClick={() => removeItem(index)}>Eliminar</button>
-                </li>
-              ))}
-            </ul>
-            <div className="cart-summary">
-              <p>Total: ${totalPrice.toFixed(2)}</p>
-              <button className="btn btn-checkout" onClick={goToCheckout}>Ir a Pagar</button>
-            </div>
-          </div>
-        </div>
+        <Cart
+          cartItems={cartItems}
+          setCartItems={setCartItems}
+          onClose={toggleCart}
+          onRemove={removeItem} // Pasando la función de eliminar al componente Cart
+          onCheckout={goToCheckout}
+        />
       )}
+
       <div ref={menuRef} className={`menu ${menuOpen ? 'open' : ''}`}>
         <ul>
           <li>
