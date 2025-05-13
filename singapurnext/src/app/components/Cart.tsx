@@ -76,7 +76,7 @@ const Cart: React.FC<CartProps> = ({ cartItems, setCartItems, onClose }) => {
     <div className="cart-overlay">
       <div ref={cartRef} className="cart-container">
         <button className="close-btn" onClick={onClose}>X</button>
-        <h2>Tu carrito 🎀</h2>
+        <h2>Tu carrito  🚀 </h2>
         <ul className="cart-items">
           {cartItems.map((item) => (
             <li key={item.id} className="cart-item">

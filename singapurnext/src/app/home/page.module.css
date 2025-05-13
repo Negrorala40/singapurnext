@@ -5,7 +5,7 @@
 
 .hero {
     background: url('https://images.pexels.com/photos/1166644/pexels-photo-1166644.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
-    color: #fff;
+    /* color: #10345c; */
     text-align: center;
     padding: 1rem 1rem;
     display: flex;
@@ -41,17 +41,24 @@
 }
 
 .destacados, .descuentos {
-    text-align: center;
-    border-radius: 8px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background-size: cover;
-    background-position: center;
-    height: 35vh;
-    color: white;
-    border: 0.5px solid #bfa181;
+  text-align: center;
+  border-radius: 12px;
+  padding: 20px;
+  background-color: rgba(16, 52, 92, 0.15); /* azul oscuro MUY suave y translúcido */
+  box-shadow: 0 8px 24px rgba(16, 52, 92, 0.4); /* sombra azul oscuro suave */
+  background-size: cover;
+  background-position: center;
+  height: 35vh;
+  border: none; /* quitamos el borde */
+  backdrop-filter: blur(6px); /* efecto vidrio si hay fondo */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
+.destacados:hover, .descuentos:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(16, 52, 92, 0.6);
+}
+
 
 .destacados {
     background-image: url('https://images.pexels.com/photos/33148/shoes-lebron-nike-spalding.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');

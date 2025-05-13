@@ -1,87 +1,91 @@
 body {
-    font-family: 'Montserrat', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
+  font-family: 'Montserrat', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f2faff; /* fondo celeste claro tipo cielo */
 }
 
 .loginContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f4f4f4;
-    padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f2faff;
+  padding: 1rem;
 }
 
 .formContainer {
-    background-color: #1a1a1a;
-    color: #fff;
-    padding: 2rem;
-    border-radius: 8px;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    text-align: center;
+  background-color: #10345c; /* azul espacial oscuro */
+  color: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 245, 255, 0.25); /* sombra celeste */
+  text-align: center;
 }
 
 .formContainer h2 {
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-    color: #f4d03f;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: #ffd43b; /* amarillo planetario */
 }
 
 .formGroup {
-    margin-bottom: 1.5rem;
-    text-align: left;
+  margin-bottom: 1.5rem;
+  text-align: left;
 }
 
 .formGroup label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-    color: #f4d03f;
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #ffd43b;
 }
 
 .formGroup input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #02f9a6; /* verde neón */
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: #fff;
+  color: #10345c;
 }
 
 .btnPrimary {
-    background-color: #f4d03f;
-    color: #1a1a1a;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    width: 100%;
+  background-color: #00f5ff; /* celeste neón */
+  color: #10345c; /* azul oscuro */
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  width: 100%;
+  font-weight: bold;
 }
 
 .btnPrimary:hover {
-    background-color: #d4af37;
+  background-color: #02f9a6; /* verde neón */
+  transform: translateY(-2px);
 }
 
 .toggleText {
-    margin-top: 1rem;
-    font-size: 0.9rem;
-    color: #ccc;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #d0f0ff; /* gris celeste */
 }
 
 .toggleLink {
-    color: #f4d03f;
-    cursor: pointer;
-    font-weight: bold;
-    margin-left: 0.3rem;
-    text-decoration: underline;
-    transition: color 0.3s ease;
+  color: #ffd43b;
+  cursor: pointer;
+  font-weight: bold;
+  margin-left: 0.3rem;
+  text-decoration: underline;
+  transition: color 0.3s ease;
 }
 
 .toggleLink:hover {
-    color: #d4af37;
+  color: #02f9a6;
 }

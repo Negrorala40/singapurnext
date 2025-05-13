@@ -1,10 +1,21 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import './Header.css';
 import Cart from './Cart';
+import { HiShoppingCart } from "react-icons/hi2";
+import { FaUserAstronaut } from "react-icons/fa6";
+import { FaBars } from "react-icons/fa6";
+import { FaSearch } from "react-icons/fa";
+import { useAuth } from '../context/AuthContext';
+
+
+
+
+
 
 interface CartItem {
   id: string; // Asegúrate de que cada item tenga un ID único
@@ -153,14 +164,22 @@ const Header: React.FC = () => {
   return (
     <header className="header">
       <div className="header-left">
-        <button className="btn btn-menu" onClick={toggleMenu}>Menú</button>
+        <button className="btn btn-menu" onClick={toggleMenu}>
+          <FaBars size={20}/>
+
+        </button>
         <Link href={`/login?redirect=${encodeURIComponent(pathname)}`} className="btn btn-login">
-          Usuario
+          <FaUserAstronaut size={25}/>
         </Link>
       </div>
-      <Link href="/" className="logo">Singapur</Link>
+        <Link href="/" className="logo" aria-label="">
+          <Image src="/images/AmarteLog.png" alt="" width={75} height={50} priority />
+        </Link>
       <div className="header-right">
-        {!searchOpen && <button className="btn btn-search" onClick={toggleSearch}>Buscar</button>}
+        {!searchOpen && <button className="btn btn-search" onClick={toggleSearch}><FaSearch size={30}/>
+
+
+</button>}
         {searchOpen && (
           <div ref={searchRef} className="search-box">
             <form onSubmit={handleSearchSubmit}>
@@ -175,7 +194,11 @@ const Header: React.FC = () => {
             </form>
           </div>
         )}
-        <button className="btn btn-cart" onClick={toggleCart}>Carrito</button>
+        <button className="btn btn-cart" onClick={toggleCart} aria-label="Abrir carrito">
+  <HiShoppingCart size={30} />
+</button>
+
+
       </div>
       {cartOpen && (
         <Cart
