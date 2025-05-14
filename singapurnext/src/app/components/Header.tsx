@@ -12,11 +12,6 @@ import { FaBars } from "react-icons/fa6";
 import { FaSearch } from "react-icons/fa";
 import { useAuth } from '../context/AuthContext';
 
-
-
-
-
-
 interface CartItem {
   id: string; // Asegúrate de que cada item tenga un ID único
   image: string;
