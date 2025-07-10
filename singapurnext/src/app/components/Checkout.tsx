@@ -19,7 +19,7 @@ const CheckoutPage = () => {
   const [orderId, setOrderId] = useState<string>('');
   const [total, setTotal] = useState<number>(0);
 
-  // 1. Inyectar el script de Bold (una sola vez)
+  // 1. Inyectar script de Bold solo una vez
   useEffect(() => {
     const scriptId = 'bold-script';
     if (!document.getElementById(scriptId)) {
@@ -31,82 +31,55 @@ const CheckoutPage = () => {
     }
   }, []);
 
-  // 2. Obtener productos del carrito
+  // 2. Obtener productos del carrito y firma
   useEffect(() => {
-    const fetchCart = async () => {
-      const userId = localStorage.getItem('userId');
+    const fetchData = async () => {
       const token = localStorage.getItem('token');
-      if (!userId || !token) return;
+      if (!token) return;
 
       try {
-        const res = await fetch(`http://localhost:8082/api/cart/${userId}`, {
+        // Obtener productos
+        const resCart = await fetch('http://localhost:8082/api/cart', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!resCart.ok) throw new Error('Error al obtener el carrito');
+        const cartData = await resCart.json();
+        console.log("🛒 Carrito recibido:", cartData);
+        setCartItems(cartData);
+
+        // Obtener firma segura desde backend
+        const resFirma = await fetch('http://localhost:8082/api/bold/signature', {
+          method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
 
-        if (!res.ok) throw new Error('Error al obtener el carrito');
-        const data = await res.json();
+        if (!resFirma.ok) throw new Error('Error al obtener firma');
+        const { orderId, signature, amount } = await resFirma.json();
 
-        const adaptedItems = data.map((item: any) => ({
-          id: item.id,
-          name: item.productName,
-          image: item.imageUrls[0] || '/default.png',
-          price: parseFloat(item.price),
-          size: item.size,
-          color: item.color,
-          quantity: item.quantity,
-        }));
+        setOrderId(orderId);
+        setSignature(signature);
+        setTotal(amount);
 
-        setCartItems(adaptedItems);
+        console.log('🧾 Firma recibida:', { orderId, signature, amount });
 
-        const calculatedTotal = adaptedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        setTotal(Math.round(calculatedTotal));
       } catch (err) {
-        console.error('Error cargando carrito:', err);
+        console.error('❌ Error en Checkout:', err);
       }
     };
 
-    fetchCart();
+    fetchData();
   }, []);
 
-  // 3. Generar firma al cargar productos
+  // 3. Montar botón Bold
   useEffect(() => {
-    if (cartItems.length === 0 || total === 0) return;
-
-    const newOrderId = `ORD-${Date.now()}`;
-    setOrderId(newOrderId);
-
-    const generateSignature = async () => {
-      try {
-        const res = await fetch('http://localhost:8082/api/bold/signature', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount: total,
-            currency: 'COP',
-            orderId: newOrderId,
-          }),
-        });
-
-        if (!res.ok) throw new Error('Error al generar la firma');
-
-        const data = await res.json();
-        setSignature(data.signature);
-      } catch (error) {
-        console.error('Error generando firma:', error);
-      }
-    };
-
-    generateSignature();
-  }, [cartItems, total]);
-
-  // 4. Insertar botón Bold
-  useEffect(() => {
-    if (!signature || !orderId) return;
+    if (!signature || !orderId || total === 0) return;
 
     const container = document.getElementById('bold-button-container');
     if (container && !container.querySelector('[data-bold-button]')) {
@@ -121,33 +94,28 @@ const CheckoutPage = () => {
       script.setAttribute('data-description', 'Compra desde tienda');
       script.setAttribute('data-tax', 'vat-19');
 
-      script.setAttribute(
-        'data-customer-data',
-        JSON.stringify({
-          email: 'cliente@correo.com',
-          fullName: 'Nombre del Cliente',
-          phone: '3001234567',
-          dialCode: '+57',
-          documentNumber: '123456789',
-          documentType: 'CC',
-        }),
-      );
+      // Opcional: reemplaza con datos reales del usuario
+      script.setAttribute('data-customer-data', JSON.stringify({
+        email: 'cliente@correo.com',
+        fullName: 'Nombre del Cliente',
+        phone: '3001234567',
+        dialCode: '+57',
+        documentNumber: '123456789',
+        documentType: 'CC',
+      }));
 
-      script.setAttribute(
-        'data-billing-address',
-        JSON.stringify({
-          address: 'Calle 123 #4-5',
-          zipCode: '110111',
-          city: 'Bogotá',
-          state: 'Cundinamarca',
-          country: 'CO',
-        }),
-      );
+      script.setAttribute('data-billing-address', JSON.stringify({
+        address: 'Calle 123 #4-5',
+        zipCode: '110111',
+        city: 'Bogotá',
+        state: 'Cundinamarca',
+        country: 'CO',
+      }));
 
       script.src = 'https://checkout.bold.co/library/boldPaymentButton.js';
       container.appendChild(script);
     }
-  }, [signature, orderId]);
+  }, [signature, orderId, total]);
 
   return (
     <div className="checkout-page">
