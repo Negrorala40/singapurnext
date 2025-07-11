@@ -1,7 +1,11 @@
-import type { NextConfig } from "next";
+// next.config.ts
+
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    domains: ['cdn.pixabay.com', 'www.istockphoto.com', 'images.unsplash.com', 'localhost'],
+  },
 };
 
 export default nextConfig;

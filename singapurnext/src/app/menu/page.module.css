@@ -1,12 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
 
 .menu-container {
-  padding: 2rem;
+  padding: 2rem 0;
   background-color: #ffffff;
   font-family: 'Fredoka', sans-serif;
   color: #10345c;
+  padding-bottom: 4rem;
 }
 
+/* Filtros */
 .filter-and-button-container {
   display: flex;
   justify-content: space-between;
@@ -45,15 +47,18 @@
   background-color: #f0f9f6;
 }
 
+/* Grid productos */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  padding: 0 %; /* Esto agrega un 15% de espacio a cada lado */
-  box-sizing: border-box; /* Asegura que el padding no rompa el layout */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
 }
 
-
+/* Tarjeta producto */
 .product-card {
   background-color: #fff;
   border: 1.5px solid #e0f7f1;
@@ -68,19 +73,22 @@
   justify-content: flex-start;
 }
 
+/* Hover */
 .product-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 10px 20px rgba(2, 249, 166, 0.15);
 }
 
+/* Imagen */
 .product-image {
   width: 100%;
-  aspect-ratio: 1 / 1; /* Relación 1:1 */
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 10px;
   margin-bottom: 16px;
 }
 
+/* Detalles */
 .product-details {
   text-align: center;
   margin-top: auto;
@@ -98,6 +106,7 @@
   color: #178582;
 }
 
+/* Botón mostrar más */
 .view-all-button {
   background-color: #10345c;
   color: #ffffff;
@@ -115,6 +124,14 @@
 .view-all-button:hover {
   background-color: #178582;
   transform: scale(1.05);
+}
+
+/* Responsivo */
+
+@media (max-width: 1024px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 768px) {

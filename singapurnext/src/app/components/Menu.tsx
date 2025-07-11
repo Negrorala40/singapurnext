@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
+import Image from 'next/image';
 import styles from '../menu/page.module.css';
 
 interface ProductVariant {
@@ -137,11 +138,15 @@ const Menu: React.FC = () => {
               className={styles['product-card']}
               onClick={() => handleProductClick(product.id)}
             >
-              <img
+              <Image
                 src={product.images[0]?.imageUrl || '/placeholder.png'}
                 alt={product.name}
+                width={240}
+                height={240}
                 className={styles['product-image']}
+                  style={{ width: '100%', height: 'auto', objectFit: 'cover', borderRadius: '10px' }}
               />
+
               <div className={styles['product-details']}>
                 <h3 className={styles['product-name']}>{product.name}</h3>
                 <p className={styles['product-price']}>
