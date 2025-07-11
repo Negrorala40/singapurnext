@@ -10,6 +10,7 @@ interface ProductVariant {
   color: string;
   size: string;
   stock: number;
+  price?: number;
 }
 
 interface Img {
@@ -46,14 +47,12 @@ const Menu: React.FC = () => {
   const searchParams = useSearchParams();
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [visibleCount, setVisibleCount] = useState(20);
   const [loading, setLoading] = useState<boolean>(true);
+  const [sortOption, setSortOption] = useState<string>('');
 
-  // URL del backend
   const API_URL = 'http://localhost:8082/api/products';
 
-  // Cargar productos desde el backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -73,90 +72,94 @@ const Menu: React.FC = () => {
   const genderQuery = searchParams.get('gender') || '';
   const typeQuery = searchParams.get('type') || '';
 
-  // Filtrar productos según los parámetros de búsqueda y categoría seleccionada
-  useEffect(() => {
-    const filtered = products.filter((product) => {
-      const matchesGender = !genderQuery || product.gender.toLowerCase() === genderQuery.toLowerCase();
-      const matchesType = !typeQuery || product.type.toLowerCase() === typeQuery.toLowerCase();
-      const matchesCategory = selectedCategory === 'Todos' || product.type === selectedCategory;
-      const matchesSearch =
-        !searchQuery ||
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredProducts = products.filter((product) => {
+    const matchesGender = !genderQuery || product.gender.toLowerCase() === genderQuery.toLowerCase();
+    const matchesType = !typeQuery || product.type.toLowerCase() === typeQuery.toLowerCase();
+    const matchesSearch =
+      !searchQuery ||
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-      return matchesGender && matchesType && matchesCategory && matchesSearch;
-    });
+    return matchesGender && matchesType && matchesSearch;
+  });
 
-    setFilteredProducts(filtered);
-  }, [products, selectedCategory, searchQuery, genderQuery, typeQuery]);
-
-  const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCategory(event.target.value);
-  };
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortOption) {
+      case 'price-asc':
+        return (a.variants[0]?.price || 0) - (b.variants[0]?.price || 0);
+      case 'price-desc':
+        return (b.variants[0]?.price || 0) - (a.variants[0]?.price || 0);
+      case 'name-asc':
+        return a.name.localeCompare(b.name);
+      case 'name-desc':
+        return b.name.localeCompare(a.name);
+      default:
+        return 0;
+    }
+  });
 
   const handleProductClick = (productId: number) => {
     router.push(`/product?id=${productId}`);
   };
 
-  const handleViewAllClick = () => {
-    setSelectedCategory('Todos');
-    router.push('/menu');
+  const handleShowMore = () => {
+    setVisibleCount((prev) => prev + 20);
   };
 
-  if (loading) {
-    return <p>Cargando productos...</p>;
-  }
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortOption(e.target.value);
+  };
+
+  if (loading) return <p>Cargando productos...</p>;
 
   return (
     <div className={`${styles['menu-container']} ${styles['menu-page']}`}>
       <div className={styles['filter-and-button-container']}>
         <div className={styles['filter-container']}>
-          <label htmlFor="filter" className={styles['filter-label']}>Filtrar por:</label>
-          <select
-            id="filter"
-            className={styles['filter-select']}
-            value={selectedCategory}
-            onChange={handleFilterChange}
-          >
-            <option value="Todos">Todos</option>
-            <option value="SUPERIOR">Superior</option>
-            <option value="INFERIOR">Inferior</option>
-            <option value="CALZADO">Calzado</option>
+          <label htmlFor="sort" className={styles['filter-label']}>Ordenar por:</label>
+          <select id="sort" className={styles['filter-select']} value={sortOption} onChange={handleSortChange}>
+            <option value="">-- Selecciona --</option>
+            <option value="price-asc">Precio: Menor a mayor</option>
+            <option value="price-desc">Precio: Mayor a menor</option>
+            <option value="name-asc">Nombre: A-Z</option>
+            <option value="name-desc">Nombre: Z-A</option>
           </select>
         </div>
-        <button className={styles['view-all-button']} onClick={handleViewAllClick}>
-          Ver Todo
-        </button>
       </div>
 
       <div className={styles['product-grid']}>
-        {filteredProducts.length === 0 ? (
+        {sortedProducts.slice(0, visibleCount).length === 0 ? (
           <p>No se encontraron productos que coincidan con los criterios seleccionados.</p>
         ) : (
-          filteredProducts.map((product) => (
+          sortedProducts.slice(0, visibleCount).map((product) => (
             <div
               key={product.id}
               className={styles['product-card']}
               onClick={() => handleProductClick(product.id)}
             >
               <img
-                src={product.images[0]?.imageUrl || '/placeholder.png'} // Usar la URL de la imagen
+                src={product.images[0]?.imageUrl || '/placeholder.png'}
                 alt={product.name}
                 className={styles['product-image']}
               />
               <div className={styles['product-details']}>
                 <h3 className={styles['product-name']}>{product.name}</h3>
                 <p className={styles['product-price']}>
-                ${product.variants.length > 0 
-                  ? Math.min(...product.variants.map(v => Number(v.price || 0))).toLocaleString('es-CO') 
-                  : 'Precio no disponible'}
-              </p>
-
+                  ${product.variants.length > 0
+                    ? Math.min(...product.variants.map(v => Number(v.price || 0))).toLocaleString('es-CO')
+                    : 'Precio no disponible'}
+                </p>
               </div>
             </div>
           ))
         )}
       </div>
+
+      {visibleCount < sortedProducts.length && (
+        <button className={styles['view-all-button']} onClick={handleShowMore}>
+          Mostrar más
+        </button>
+      )}
     </div>
   );
 };
