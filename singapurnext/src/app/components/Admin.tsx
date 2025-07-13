@@ -30,20 +30,22 @@ const Admin = () => {
   const router = useRouter();
   const [role, setRole] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [gender, setGender] = useState("");
   const [type, setType] = useState("");
-  const [fileName, setFileName] = useState("");
 
-  // Variante actual (solo una variante editable a la vez)
-  const [color, setColor] = useState("");
-  const [size, setSize] = useState("");
-  const [stock, setStock] = useState(0);
-  const [price, setPrice] = useState(0);
-  const [imageUrls, setImageUrls] = useState<string[]>([""]);
+  const [variants, setVariants] = useState<Variant[]>([
+    {
+      color: "",
+      size: "",
+      stock: 0,
+      price: 0,
+      images: [{ fileName: "", imageUrl: "" }],
+    },
+  ]);
 
-  // Para edición
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -76,70 +78,65 @@ const Admin = () => {
     }
   };
 
-  const handleImageUrlChange = (index: number, value: string) => {
-    const newUrls = [...imageUrls];
-    newUrls[index] = value;
-    setImageUrls(newUrls);
+  const handleVariantChange = (index: number, field: keyof Variant, value: any) => {
+    const updatedVariants = [...variants];
+    (updatedVariants[index] as any)[field] = value;
+    setVariants(updatedVariants);
   };
 
-  const handleAddImageUrl = () => {
-    setImageUrls([...imageUrls, ""]);
+  const handleImageChange = (variantIndex: number, imageIndex: number, field: keyof Image, value: string) => {
+    const updatedVariants = [...variants];
+    updatedVariants[variantIndex].images[imageIndex][field] = value;
+    setVariants(updatedVariants);
   };
 
-  const resetForm = () => {
-    setName("");
-    setDescription("");
-    setGender("");
-    setType("");
-    setColor("");
-    setSize("");
-    setStock(0);
-    setPrice(0);
-    setFileName("");
-    setImageUrls([""]);
-    setEditingProductId(null);
+  const handleAddImage = (variantIndex: number) => {
+    const updatedVariants = [...variants];
+    updatedVariants[variantIndex].images.push({ fileName: "", imageUrl: "" });
+    setVariants(updatedVariants);
+  };
+
+  const handleAddVariant = () => {
+    setVariants([
+      ...variants,
+      {
+        color: "",
+        size: "",
+        stock: 0,
+        price: 0,
+        images: [{ fileName: "", imageUrl: "" }],
+      },
+    ]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validaciones básicas
-    if (
-      !name.trim() ||
-      !description.trim() ||
-      !gender.trim() ||
-      !type.trim() ||
-      price <= 0 ||
-      !color.trim() ||
-      !size.trim() ||
-      stock <= 0 ||
-      imageUrls.some((url) => !url.trim())
-    ) {
-      alert("Todos los campos deben estar completos antes de enviar el formulario.");
+    // Validaciones
+    if (!name.trim() || !description.trim() || !gender.trim() || !type.trim()) {
+      alert("Los campos generales del producto son obligatorios.");
       return;
     }
 
-    const filteredImageUrls = imageUrls.filter((url) => url.trim() !== "");
-
-    const variant: Variant = {
-      color,
-      size,
-      stock,
-      price,
-      images: filteredImageUrls.map((url, index) => ({
-        fileName: fileName
-          ? `${fileName}_${index + 1}.jpg`
-          : `image_${index + 1}.jpg`,
-        imageUrl: url,
-      })),
-    };
+    for (let variant of variants) {
+      if (
+        !variant.color ||
+        !variant.size ||
+        variant.stock <= 0 ||
+        variant.price <= 0 ||
+        variant.images.some((img) => !img.imageUrl.trim())
+      ) {
+        alert("Completa correctamente todas las variantes e imágenes.");
+        return;
+      }
+    }
 
     const productData: Product = {
       name,
       description,
       gender,
       type,
-      variants: [variant],
+      variants,
     };
 
     try {
@@ -165,10 +162,7 @@ const Admin = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(
-          editingProductId ? "Producto actualizado:" : "Producto guardado exitosamente:",
-          data
-        );
+        console.log("Producto guardado/actualizado:", data);
         fetchProducts();
         resetForm();
       } else {
@@ -177,6 +171,32 @@ const Admin = () => {
     } catch (error) {
       console.error("Error en la solicitud:", error);
     }
+  };
+
+  const resetForm = () => {
+    setName("");
+    setDescription("");
+    setGender("");
+    setType("");
+    setVariants([
+      {
+        color: "",
+        size: "",
+        stock: 0,
+        price: 0,
+        images: [{ fileName: "", imageUrl: "" }],
+      },
+    ]);
+    setEditingProductId(null);
+  };
+
+  const handleEdit = (product: Product) => {
+    setName(product.name);
+    setDescription(product.description);
+    setGender(product.gender);
+    setType(product.type);
+    setVariants(product.variants);
+    setEditingProductId(product.id || null);
   };
 
   const handleDelete = async (id: number) => {
@@ -200,34 +220,7 @@ const Admin = () => {
     }
   };
 
-  const handleEdit = (product: Product) => {
-    setName(product.name);
-    setDescription(product.description);
-    setGender(product.gender);
-    setType(product.type);
-
-    if (product.variants && product.variants.length > 0) {
-      const variant = product.variants[0];
-      setColor(variant.color);
-      setSize(variant.size);
-      setStock(variant.stock);
-      setPrice(variant.price);
-      setImageUrls(variant.images.map((img) => img.imageUrl));
-      setFileName(variant.images[0]?.fileName || "");
-    } else {
-      setColor("");
-      setSize("");
-      setStock(0);
-      setPrice(0);
-      setImageUrls([""]);
-      setFileName("");
-    }
-    setEditingProductId(product.id || null);
-  };
-
-  if (role !== "ADMIN") {
-    return null;
-  }
+  if (role !== "ADMIN") return null;
 
   return (
     <div className={styles.container}>
@@ -248,30 +241,6 @@ const Admin = () => {
           className={styles.textarea}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-        />
-
-        <label className={styles.label}>Color:</label>
-        <input
-          className={styles.input}
-          type="text"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-        />
-
-        <label className={styles.label}>Talla:</label>
-        <input
-          className={styles.input}
-          type="text"
-          value={size}
-          onChange={(e) => setSize(e.target.value)}
-        />
-
-        <label className={styles.label}>Stock:</label>
-        <input
-          className={styles.input}
-          type="number"
-          value={stock.toString()}
-          onChange={(e) => setStock(Number(e.target.value))}
         />
 
         <label className={styles.label}>Género:</label>
@@ -298,39 +267,81 @@ const Admin = () => {
           <option value="CALZADO">CALZADO</option>
         </select>
 
-        <label className={styles.label}>Precio:</label>
-        <input
-          className={styles.input}
-          type="number"
-          value={price}
-          onChange={(e) => setPrice(parseFloat(e.target.value))}
-        />
-
-        <label className={styles.label}>Nombre de la Imagen:</label>
-        <input
-          className={styles.input}
-          type="text"
-          value={fileName}
-          onChange={(e) => setFileName(e.target.value)}
-        />
-
-        <label className={styles.label}>URL de las Imágenes:</label>
-        {imageUrls.map((url, index) => (
-          <div key={index} className={styles.urlContainer}>
+        <hr />
+        <h3>Variantes</h3>
+        {variants.map((variant, index) => (
+          <div key={index} className={styles.variantBox}>
+            <label className={styles.label}>Color:</label>
             <input
               className={styles.input}
               type="text"
-              value={url}
-              onChange={(e) => handleImageUrlChange(index, e.target.value)}
+              value={variant.color}
+              onChange={(e) => handleVariantChange(index, "color", e.target.value)}
             />
+
+            <label className={styles.label}>Talla:</label>
+            <input
+              className={styles.input}
+              type="text"
+              value={variant.size}
+              onChange={(e) => handleVariantChange(index, "size", e.target.value)}
+            />
+
+            <label className={styles.label}>Stock:</label>
+            <input
+              className={styles.input}
+              type="number"
+              value={variant.stock}
+              onChange={(e) => handleVariantChange(index, "stock", Number(e.target.value))}
+            />
+
+            <label className={styles.label}>Precio:</label>
+            <input
+              className={styles.input}
+              type="number"
+              value={variant.price}
+              onChange={(e) => handleVariantChange(index, "price", parseFloat(e.target.value))}
+            />
+
+            <label className={styles.label}>Imágenes:</label>
+            {variant.images.map((img, imgIndex) => (
+              <div key={imgIndex}>
+                <input
+                  className={styles.input}
+                  type="text"
+                  placeholder="Nombre del archivo"
+                  value={img.fileName}
+                  onChange={(e) =>
+                    handleImageChange(index, imgIndex, "fileName", e.target.value)
+                  }
+                />
+                <input
+                  className={styles.input}
+                  type="text"
+                  placeholder="URL de la imagen"
+                  value={img.imageUrl}
+                  onChange={(e) =>
+                    handleImageChange(index, imgIndex, "imageUrl", e.target.value)
+                  }
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              className={styles.addButton}
+              onClick={() => handleAddImage(index)}
+            >
+              Agregar otra imagen
+            </button>
+            <hr />
           </div>
         ))}
         <button
-          className={styles.addButton}
           type="button"
-          onClick={handleAddImageUrl}
+          className={styles.addButton}
+          onClick={handleAddVariant}
         >
-          Agregar otra URL
+          Agregar otra variante
         </button>
 
         <button className={styles.button} type="submit">
