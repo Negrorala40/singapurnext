@@ -11,22 +11,22 @@ a {
 }
 
 .icon:hover {
-  color: #f4d03f; /* dorado claro */
+  color: #f4d03f;
+  animation: soft-shake 0.3s ease-in-out;
 }
 
 /* Header Styles */
 header,
 .header {
-  background-color:white;
-    backdrop-filter: blur(6px); /* efecto de vidrio */
-
-  color: #fff;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  color: #10345c;
   padding: 0.5rem 0;
   position: fixed;
   top: 0;
   width: 100%;
   z-index: 1000;
-  height: 3rem;
+  height: 3.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -40,17 +40,14 @@ header,
   text-align: center;
   flex: 1;
   transition: color 0.3s;
-  
 }
+
 .logo img {
-  filter: 
-    drop-shadow(0 0 10px rgba(145, 145, 145, 0.4))   /* luz base */
-    drop-shadow(0 0 20px rgba(126, 126, 126, 0.3))   /* aura azulada */
-    drop-shadow(0 0 30px rgba(128, 128, 128, 0.2));  /* halo suave */;
+  filter: drop-shadow(0 0 10px rgba(145, 145, 145, 0.4))
+          drop-shadow(0 0 20px rgba(126, 126, 126, 0.3))
+          drop-shadow(0 0 30px rgba(128, 128, 128, 0.2));
   transition: filter 0.3s ease;
 }
-
-
 
 .header .logo:hover {
   color: #00c20a;
@@ -58,7 +55,6 @@ header,
 
 .header-left,
 .header-right {
-    
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -67,40 +63,38 @@ header,
 
 .header-left .btn,
 .header-right .btn {
-    
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0.3rem;
+  width: 2.2rem;
+  height: 2.2rem;
   border: none;
   background: transparent;
   color: #10345c;
   border-radius: 50%;
   transition: background 0.3s, color 0.3s;
-  font-size: 0.9rem;
 }
 
 .header-left .btn:hover,
 .header-right .btn:hover {
   background: #02f9a6;
   color: #0a1828;
-    animation: soft-shake 0.3s ease-in-out;
-
+  animation: soft-shake 0.3s ease-in-out;
 }
 
 /* Menu Styles */
 .menu {
   display: none;
   position: absolute;
-  top: 3.2rem;
+  top: 3.5rem;
   left: 1rem;
-  background-color: #1a1a1a;
-  width: 200px;
+  width: 220px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
   padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(16, 52, 92, 0.1);
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
@@ -115,7 +109,7 @@ header,
 }
 
 .menu li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.7rem;
 }
 
 .menu li:last-child {
@@ -125,17 +119,23 @@ header,
 .submenu-toggle {
   background: none;
   border: none;
-  color: #f4d03f;
-  font-weight: bold;
+  color: #10345c;
+  font-weight: 600;
   cursor: pointer;
   width: 100%;
   text-align: left;
-  padding: 0.3rem 0;
+  font-size: 1rem;
+  padding: 0.4rem 0;
+  transition: color 0.3s;
+}
+
+.submenu-toggle:hover {
+  color: #00c20a;
 }
 
 .submenu {
   display: none;
-  margin-top: 0.3rem;
+  margin-top: 0.4rem;
   padding-left: 1rem;
 }
 
@@ -144,34 +144,40 @@ header,
 }
 
 .submenu li a {
-  color: #ccc;
-  font-size: 0.9rem;
+  color: #555;
+  font-size: 0.95rem;
   transition: color 0.2s;
 }
 
 .submenu li a:hover {
-  color: #f4d03f;
+  color: #00c20a;
 }
 
 /* Search Box */
 .search-box {
   position: absolute;
   right: 4rem;
-  top: 3.2rem;
-  background-color: #1a1a1a;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  top: 3.5rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(16, 52, 92, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 1001;
 }
 
 .search-input {
   padding: 0.4rem 0.6rem;
-  border: 1px solid #178582;
-  border-radius: 4px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
   width: 180px;
-  margin-right: 0.5rem;
   background-color: transparent;
-  color: #fff;
+  color: #10345c;
+  font-size: 0.95rem;
 }
 
 .search-input::placeholder {
@@ -182,10 +188,11 @@ header,
   background-color: #178582;
   color: #fff;
   border: none;
-  padding: 0.4rem 0.6rem;
-  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.3s, color 0.3s;
+  font-weight: bold;
 }
 
 .search-submit-btn:hover {
@@ -193,7 +200,7 @@ header,
   color: #0a1828;
 }
 
-/* Carrito botón (puede ser personalizado más) */
+/* Carrito botón */
 .btn-cart {
   position: relative;
 }
@@ -201,13 +208,15 @@ header,
 /* Responsive */
 @media (max-width: 768px) {
   .menu {
-    width: 160px;
+    width: 180px;
     left: 0.5rem;
   }
 
   .search-box {
-    right: 1rem;
-    width: calc(100% - 2rem);
+    right: 0.5rem;
+    flex-direction: column;
+    align-items: stretch;
+    width: calc(100% - 1rem);
   }
 
   .search-input {
@@ -226,17 +235,11 @@ header,
   }
 }
 
-/* Animación de temblor suave */
+/* Soft Shake Animation */
 @keyframes soft-shake {
   0% { transform: translate(0, 0); }
   25% { transform: translate(0.5px, -0.5px); }
   50% { transform: translate(-0.5px, 0.5px); }
   75% { transform: translate(0.5px, 0.5px); }
   100% { transform: translate(0, 0); }
-}
-
-/* Aplica el temblor suave al pasar el mouse */
-.icon:hover {
-  animation: soft-shake 0.3s ease-in-out;
-  color: #f4d03f;
 }

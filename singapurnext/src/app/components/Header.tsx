@@ -8,12 +8,11 @@ import './Header.css';
 import Cart from './Cart';
 import { HiShoppingCart } from "react-icons/hi2";
 import { FaUserAstronaut } from "react-icons/fa6";
-import { FaBars } from "react-icons/fa6";
-import { FaSearch } from "react-icons/fa";
-import { useAuth } from '../context/AuthContext';
+import {FaBars} from "react-icons/fa6";
+import {FaSearch}from "react-icons/fa";
 
 interface CartItem {
-  id: string; // Asegúrate de que cada item tenga un ID único
+  id: string;
   image: string;
   name: string;
   price: number;
@@ -22,8 +21,6 @@ interface CartItem {
   quantity: number;
 }
 
-const API_URL = 'http://localhost:8082/api/cart';
-
 const Header: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [submenuOpen, setSubmenuOpen] = useState<string | null>(null);
@@ -31,110 +28,18 @@ const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
   const menuRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
-  const cartRef = useRef<HTMLDivElement | null>(null);
+
   const router = useRouter();
   const pathname = usePathname();
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
-  const toggleSubmenu = (menu: string) => setSubmenuOpen(submenuOpen === menu ? null : menu);
+  const toggleSubmenu = (menu: string) =>
+    setSubmenuOpen(submenuOpen === menu ? null : menu);
   const toggleSearch = () => setSearchOpen(!searchOpen);
   const toggleCart = () => setCartOpen(!cartOpen);
-
-  // Eliminar producto desde el carrito
-  const removeItem = async (itemId: string) => {
-    const userId = localStorage.getItem('userId');
-    const token = localStorage.getItem('token');
-
-    if (!userId || !token) {
-      console.warn('Falta userId o token');
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_URL}/remove/${itemId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error('Error al eliminar el producto');
-      }
-
-      // Eliminar del carrito en el estado local
-      const updatedCart = cartItems.filter(item => item.id !== itemId);
-      setCartItems(updatedCart);
-      
-    } catch (error) {
-      console.error('Error eliminando el producto del carrito:', error);
-    }
-  };
-
-  // Cargar los items del carrito desde el backend
-  useEffect(() => {
-    const fetchCartFromBackend = async () => {
-      const userId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
-
-      if (!userId || !token) {
-        console.warn('Falta userId o token');
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_URL}/${userId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!res.ok) throw new Error('Error al obtener el carrito');
-        const data = await res.json();
-
-        // Adaptamos los datos del carrito
-        const adaptedCartItems = data.map((item: any) => ({
-          id: item.id, // Asegúrate de que cada producto tenga un id único
-          image: item.imageUrls[0] || '/default.png',
-          name: item.productName,
-          price: parseFloat(item.price),
-          size: item.size,
-          color: item.color,
-          quantity: item.quantity,
-        }));
-
-        setCartItems(adaptedCartItems);
-      } catch (error) {
-        console.error('Error cargando el carrito:', error);
-      }
-    };
-
-    fetchCartFromBackend();
-  }, []);
-
-  // Cerrar el carrito si se hace clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
-        setSubmenuOpen(null);
-      }
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setSearchOpen(false);
-      }
-      if (cartRef.current && !cartRef.current.contains(event.target as Node)) {
-        setCartOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const handleSearchSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -145,36 +50,57 @@ const Header: React.FC = () => {
     }
   };
 
-  const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+        setSubmenuOpen(null);
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
 
-  const goToCheckout = () => {
-    setCartOpen(false);
-    const query = new URLSearchParams({
-      cartItems: JSON.stringify(cartItems),
-      totalPrice: totalPrice.toString(),
-    }).toString();
-    router.push(`/checkout?${query}`);
-  };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const renderSubmenuLinks = (gender: string) => (
+    <ul className={`submenu ${submenuOpen === gender ? 'open' : ''}`}>
+      <li>
+        <Link href={`/menu?gender=${gender}&type=superior`}>Superior</Link>
+      </li>
+      <li>
+        <Link href={`/menu?gender=${gender}&type=inferior`}>Inferior</Link>
+      </li>
+      <li>
+        <Link href={`/menu?gender=${gender}&type=calzado`}>Calzado</Link>
+      </li>
+    </ul>
+  );
 
   return (
     <header className="header">
       <div className="header-left">
         <button className="btn btn-menu" onClick={toggleMenu}>
-          <FaBars size={20}/>
-
+          <FaBars size={20} />
         </button>
         <Link href={`/login?redirect=${encodeURIComponent(pathname)}`} className="btn btn-login">
-          <FaUserAstronaut size={25}/>
+          <FaUserAstronaut size={25} />
         </Link>
       </div>
-        <Link href="/" className="logo" aria-label="">
-          <Image src="/images/AmarteLog.png" alt="" width={75} height={50} priority />
-        </Link>
+
+      <Link href="/" className="logo" aria-label="Inicio">
+        <Image src="/images/AmarteLog.png" alt="Logo Amarte" width={75} height={50} priority />
+      </Link>
+
       <div className="header-right">
-        {!searchOpen && <button className="btn btn-search" onClick={toggleSearch}><FaSearch size={30}/>
+        {!searchOpen && (
+          <button className="btn btn-search" onClick={toggleSearch}>
+            <FaSearch size={30} />
+          </button>
+        )}
 
-
-</button>}
         {searchOpen && (
           <div ref={searchRef} className="search-box">
             <form onSubmit={handleSearchSubmit}>
@@ -189,19 +115,17 @@ const Header: React.FC = () => {
             </form>
           </div>
         )}
+
         <button className="btn btn-cart" onClick={toggleCart} aria-label="Abrir carrito">
-  <HiShoppingCart size={30} />
-</button>
-
-
+          <HiShoppingCart size={30} />
+        </button>
       </div>
+
       {cartOpen && (
         <Cart
           cartItems={cartItems}
           setCartItems={setCartItems}
           onClose={toggleCart}
-          onRemove={removeItem} // Pasando la función de eliminar al componente Cart
-          onCheckout={goToCheckout}
         />
       )}
 
@@ -209,19 +133,15 @@ const Header: React.FC = () => {
         <ul>
           <li>
             <button className="submenu-toggle" onClick={() => toggleSubmenu('hombre')}>Hombre</button>
-            <ul className={`submenu ${submenuOpen === 'hombre' ? 'open' : ''}`}>
-              <li><Link href="/menu?gender=hombre&subcategory=superior">Superior</Link></li>
-              <li><Link href="/menu?gender=hombre&subcategory=inferior">Inferior</Link></li>
-              <li><Link href="/menu?gender=hombre&subcategory=calzado">Calzado</Link></li>
-            </ul>
+            {renderSubmenuLinks('hombre')}
           </li>
           <li>
             <button className="submenu-toggle" onClick={() => toggleSubmenu('mujer')}>Mujer</button>
-            <ul className={`submenu ${submenuOpen === 'mujer' ? 'open' : ''}`}>
-              <li><Link href="/menu?gender=mujer&subcategory=superior">Superior</Link></li>
-              <li><Link href="/menu?gender=mujer&subcategory=inferior">Inferior</Link></li>
-              <li><Link href="/menu?gender=mujer&subcategory=calzado">Calzado</Link></li>
-            </ul>
+            {renderSubmenuLinks('mujer')}
+          </li>
+          <li>
+            <button className="submenu-toggle" onClick={() => toggleSubmenu('unisex')}>Unisex</button>
+            {renderSubmenuLinks('unisex')}
           </li>
         </ul>
       </div>
