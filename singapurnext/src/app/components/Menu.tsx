@@ -6,18 +6,19 @@ import axios from 'axios';
 import Image from 'next/image';
 import styles from '../menu/page.module.css';
 
+interface Img {
+  id: number;
+  fileName: string;
+  imageUrl: string;
+}
+
 interface ProductVariant {
   id: number;
   color: string;
   size: string;
   stock: number;
   price?: number;
-}
-
-interface Img {
-  id: number;
-  fileName: string;
-  imageUrl: string;
+  images: Img[];
 }
 
 enum ProductGender {
@@ -38,9 +39,7 @@ interface Product {
   description: string;
   gender: ProductGender;
   type: ProductType;
-  price: number;
   variants: ProductVariant[];
-  images: Img[];
 }
 
 const Menu: React.FC = () => {
@@ -85,11 +84,14 @@ const Menu: React.FC = () => {
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
+    const aPrice = a.variants[0]?.price || 0;
+    const bPrice = b.variants[0]?.price || 0;
+
     switch (sortOption) {
       case 'price-asc':
-        return (a.variants[0]?.price || 0) - (b.variants[0]?.price || 0);
+        return aPrice - bPrice;
       case 'price-desc':
-        return (b.variants[0]?.price || 0) - (a.variants[0]?.price || 0);
+        return bPrice - aPrice;
       case 'name-asc':
         return a.name.localeCompare(b.name);
       case 'name-desc':
@@ -132,31 +134,36 @@ const Menu: React.FC = () => {
         {sortedProducts.slice(0, visibleCount).length === 0 ? (
           <p>No se encontraron productos que coincidan con los criterios seleccionados.</p>
         ) : (
-          sortedProducts.slice(0, visibleCount).map((product) => (
-            <div
-              key={product.id}
-              className={styles['product-card']}
-              onClick={() => handleProductClick(product.id)}
-            >
-              <Image
-                src={product.images[0]?.imageUrl || '/placeholder.png'}
-                alt={product.name}
-                width={240}
-                height={240}
-                className={styles['product-image']}
-                  style={{ width: '100%', height: 'auto', objectFit: 'cover', borderRadius: '10px' }}
-              />
+          sortedProducts.slice(0, visibleCount).map((product) => {
+            // Obtener la primera imagen de la primera variante como imagen principal
+            const primaryImage = product.variants[0]?.images?.[0]?.imageUrl || '/placeholder.png';
+            const price = product.variants.length > 0
+              ? Math.min(...product.variants.map(v => Number(v.price || 0)))
+              : 0;
 
-              <div className={styles['product-details']}>
-                <h3 className={styles['product-name']}>{product.name}</h3>
-                <p className={styles['product-price']}>
-                  ${product.variants.length > 0
-                    ? Math.min(...product.variants.map(v => Number(v.price || 0))).toLocaleString('es-CO')
-                    : 'Precio no disponible'}
-                </p>
+            return (
+              <div
+                key={product.id}
+                className={styles['product-card']}
+                onClick={() => handleProductClick(product.id)}
+              >
+                <Image
+                  src={primaryImage}
+                  alt={product.name}
+                  width={240}
+                  height={240}
+                  className={styles['product-image']}
+                  style={{ width: '100%', height: 'auto', objectFit: 'cover', borderRadius: '10px' }}
+                />
+                <div className={styles['product-details']}>
+                  <h3 className={styles['product-name']}>{product.name}</h3>
+                  <p className={styles['product-price']}>
+                    {price > 0 ? `$${price.toLocaleString('es-CO')}` : 'Precio no disponible'}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
