@@ -1,4 +1,4 @@
-/* General Styles */
+/* === General Styles === */
 a {
   text-decoration: none;
   color: inherit;
@@ -15,12 +15,11 @@ a {
   animation: soft-shake 0.3s ease-in-out;
 }
 
-/* Header Styles */
+/* === Header Styles === */
 header,
 .header {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  color: #10345c;
+  background: #ffffff; /* Fondo blanco sólido */
+  color: #10345c; /* Texto azul oscuro */
   padding: 0.5rem 0;
   position: fixed;
   top: 0;
@@ -82,38 +81,60 @@ header,
   animation: soft-shake 0.3s ease-in-out;
 }
 
-/* Menu Styles */
-.menu {
-  display: none;
-  position: absolute;
-  top: 3.5rem;
-  left: 1rem;
-  width: 220px;
+/* === Side Slide Menu === */
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 250px;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
-  padding: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(16, 52, 92, 0.1);
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.2);
+  border-right: 1px solid rgba(16, 52, 92, 0.1);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 1100;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
 }
 
-.menu.open {
-  display: block;
+.side-menu.open {
+  transform: translateX(0);
 }
 
-.menu ul {
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #10345c;
+  margin-bottom: 1rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #10345c;
+  transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+  color: #00c20a;
+}
+
+.side-menu ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.menu li {
-  margin-bottom: 0.7rem;
-}
-
-.menu li:last-child {
-  margin-bottom: 0;
+.side-menu li {
+  margin-bottom: 0.8rem;
 }
 
 .submenu-toggle {
@@ -125,7 +146,7 @@ header,
   width: 100%;
   text-align: left;
   font-size: 1rem;
-  padding: 0.4rem 0;
+  padding: 0.3rem 0;
   transition: color 0.3s;
 }
 
@@ -135,8 +156,8 @@ header,
 
 .submenu {
   display: none;
-  margin-top: 0.4rem;
   padding-left: 1rem;
+  margin-top: 0.3rem;
 }
 
 .submenu.open {
@@ -153,31 +174,47 @@ header,
   color: #00c20a;
 }
 
-/* Search Box */
-.search-box {
-  position: absolute;
-  right: 4rem;
-  top: 3.5rem;
+/* === Search Panel === */
+.search-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 250px; /* igual que el menú */
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(16, 52, 92, 0.1);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2);
+  border-left: 1px solid rgba(16, 52, 92, 0.1);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1100; /* mismo que el menú */
+  padding: 1.5rem 1rem;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  z-index: 1001;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.search-panel.open {
+  transform: translateX(0);
+}
+
+/* Form styling dentro del panel */
+.search-panel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex-grow: 1;
+  width: 100%;
 }
 
 .search-input {
-  padding: 0.4rem 0.6rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid #ccc;
   border-radius: 6px;
-  width: 180px;
   background-color: transparent;
   color: #10345c;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  width: 100%;
 }
 
 .search-input::placeholder {
@@ -188,11 +225,12 @@ header,
   background-color: #178582;
   color: #fff;
   border: none;
-  padding: 0.4rem 0.8rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.3s, color 0.3s;
   font-weight: bold;
+  font-size: 1rem;
 }
 
 .search-submit-btn:hover {
@@ -200,42 +238,30 @@ header,
   color: #0a1828;
 }
 
-/* Carrito botón */
+/* === Carrito botón === */
 .btn-cart {
   position: relative;
 }
 
-/* Responsive */
+/* === Responsive === */
 @media (max-width: 768px) {
-  .menu {
-    width: 180px;
-    left: 0.5rem;
-  }
-
-  .search-box {
-    right: 0.5rem;
-    flex-direction: column;
-    align-items: stretch;
-    width: calc(100% - 1rem);
-  }
-
-  .search-input {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-
-  .search-submit-btn {
-    width: 100%;
-  }
-
   .header {
     flex-wrap: wrap;
     height: auto;
     padding-bottom: 0.5rem;
   }
+
+  .side-menu {
+    width: 200px;
+  }
+
+  .search-panel {
+    width: 200px;
+    padding: 1rem;
+  }
 }
 
-/* Soft Shake Animation */
+/* === Animación: Temblor suave === */
 @keyframes soft-shake {
   0% { transform: translate(0, 0); }
   25% { transform: translate(0.5px, -0.5px); }

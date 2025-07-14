@@ -101,20 +101,19 @@ const Header: React.FC = () => {
           </button>
         )}
 
-        {searchOpen && (
-          <div ref={searchRef} className="search-box">
-            <form onSubmit={handleSearchSubmit}>
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Buscar productos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <button type="submit" className="search-submit-btn">Buscar</button>
-            </form>
-          </div>
-        )}
+        <div className={`search-panel ${searchOpen ? 'open' : ''}`} ref={searchRef}>
+  <form onSubmit={handleSearchSubmit} className="search-panel-form">
+    <input
+      type="text"
+      className="search-input"
+      placeholder="Buscar productos..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+    />
+    <button type="submit" className="search-submit-btn">Buscar</button>
+  </form>
+</div>
+
 
         <button className="btn btn-cart" onClick={toggleCart} aria-label="Abrir carrito">
           <HiShoppingCart size={30} />
@@ -129,22 +128,28 @@ const Header: React.FC = () => {
         />
       )}
 
-      <div ref={menuRef} className={`menu ${menuOpen ? 'open' : ''}`}>
-        <ul>
-          <li>
-            <button className="submenu-toggle" onClick={() => toggleSubmenu('hombre')}>Hombre</button>
-            {renderSubmenuLinks('hombre')}
-          </li>
-          <li>
-            <button className="submenu-toggle" onClick={() => toggleSubmenu('mujer')}>Mujer</button>
-            {renderSubmenuLinks('mujer')}
-          </li>
-          <li>
-            <button className="submenu-toggle" onClick={() => toggleSubmenu('unisex')}>Unisex</button>
-            {renderSubmenuLinks('unisex')}
-          </li>
-        </ul>
-      </div>
+      {/* Slide-out Menu */}
+<div ref={menuRef} className={`side-menu ${menuOpen ? 'open' : ''}`}>
+  <div className="menu-header">
+    <span>Menú</span>
+    <button onClick={() => setMenuOpen(false)} className="close-btn">✕</button>
+  </div>
+  <ul>
+    <li>
+      <button className="submenu-toggle" onClick={() => toggleSubmenu('hombre')}>Hombre</button>
+      {renderSubmenuLinks('hombre')}
+    </li>
+    <li>
+      <button className="submenu-toggle" onClick={() => toggleSubmenu('mujer')}>Mujer</button>
+      {renderSubmenuLinks('mujer')}
+    </li>
+    <li>
+      <button className="submenu-toggle" onClick={() => toggleSubmenu('unisex')}>Unisex</button>
+      {renderSubmenuLinks('unisex')}
+    </li>
+  </ul>
+</div>
+
     </header>
   );
 };
