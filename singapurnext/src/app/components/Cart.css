@@ -1,56 +1,49 @@
-.cart-overlay {
+.cart-panel {
   position: fixed;
   top: 0;
-  left: 0;
-  width: 100%;
+  right: 0;
   height: 100vh;
-  background: rgba(10, 24, 40, 0.85); /* fondo espacial translúcido */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
-  font-family: 'Montserrat', sans-serif;
-}
-
-.cart-container {
-  background: #0f1c2e; /* azul espacial oscuro */
-  border: 2px solid #2a9d8f; /* verde azulado */
-  border-radius: 20px;
-  width: 90%;
-  max-width: 400px;
-  height: 90%;
-  padding: 1.5rem;
+  width: 300px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2);
+  border-left: 1px solid rgba(16, 52, 92, 0.1);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1100;
+  padding: 1.5rem 1rem;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  position: relative;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-  color: #f4f4f4;
+  font-family: 'Montserrat', sans-serif;
+  color: #0f1c2e;
+}
+
+.cart-panel.open {
+  transform: translateX(0);
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #10345c;
+  margin-bottom: 1rem;
 }
 
 .close-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: #10345c;
+  background: none;
   border: none;
   font-size: 1.4rem;
-  color: #f4d03f;
   cursor: pointer;
-  border-radius: 50%;
-  padding: 0.3rem 0.6rem;
-  transition: background 0.3s;
+  color: #10345c;
+  transition: color 0.3s ease;
 }
 
 .close-btn:hover {
-  background: #2a9d8f;
-}
-
-.cart-container h2 {
-  text-align: center;
-  font-size: 1.6rem;
-  color: #f4d03f;
-  margin-bottom: 1rem;
+  color: #00c20a;
 }
 
 .cart-items {
@@ -58,48 +51,44 @@
   padding: 0;
   margin: 0;
   flex: 1;
-  overflow-y: auto;
 }
 
 .cart-item {
   display: flex;
-  align-items: flex-start;
   margin-bottom: 1rem;
-  padding-bottom: 1rem;
   border-bottom: 1px dashed #2a9d8f;
+  padding-bottom: 1rem;
 }
 
 .cart-item img {
   width: 60px;
   height: 60px;
-  margin-right: 1rem;
-  border-radius: 10px;
   object-fit: cover;
-  border: 1px solid #2a9d8f;
+  border-radius: 8px;
+  margin-right: 0.8rem;
+  border: 1px solid #ccc;
 }
 
 .cart-item div {
   flex: 1;
   font-size: 0.9rem;
-  color: #f1f1f1;
 }
 
 .quantity-selector {
-  margin-top: 0.5rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin-top: 0.3rem;
 }
 
 .quantity-selector button {
   background: #178582;
   border: none;
   padding: 0.3rem 0.7rem;
-  border-radius: 10px;
-  font-size: 1rem;
-  cursor: pointer;
+  border-radius: 6px;
   color: white;
-  transition: background 0.3s;
+  cursor: pointer;
+  transition: background 0.3s ease;
 }
 
 .quantity-selector button:hover {
@@ -108,20 +97,20 @@
 
 .quantity-selector span {
   font-weight: bold;
-  color: #f4d03f;
+  color: #10345c;
 }
 
 .btn-remove {
   background: #e63946;
   color: white;
   border: none;
-  border-radius: 10px;
-  padding: 0.5rem;
+  border-radius: 8px;
+  padding: 0.4rem;
   font-size: 0.8rem;
   cursor: pointer;
   margin-left: 0.5rem;
   align-self: start;
-  transition: background 0.3s;
+  transition: background 0.3s ease;
 }
 
 .btn-remove:hover {
@@ -129,34 +118,43 @@
 }
 
 .cart-summary {
-  text-align: center;
   margin-top: 1rem;
-  padding: 1rem;
-  background-color: #122536;
-  border-radius: 10px;
-  color: #f4f4f4;
+  padding-top: 1rem;
+  border-top: 1px solid #ccc;
+  text-align: center;
+  margin-bottom: 1.5rem; /* ✅ espacio adicional para evitar superposición */
 }
 
 .cart-summary p {
   font-size: 1rem;
   margin: 0.5rem 0;
+  color: #10345c;
 }
 
 .btn-checkout {
-  background: #2a9d8f;
+  background: #178582;
+  color: #ffffff;
   border: none;
   padding: 0.8rem;
   width: 100%;
+  border-radius: 10px;
+  font-weight: 600; /* ✅ estilo similar al menú Header */
   font-size: 1rem;
-  font-weight: bold;
-  border-radius: 15px;
+  font-family: 'Montserrat', sans-serif; /* ✅ igual que el header */
   cursor: pointer;
-  color: #0a1828;
   margin-top: 0.5rem;
-  transition: background 0.3s;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .btn-checkout:hover {
   background: #f4d03f;
   color: #0a1828;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cart-panel {
+    width: 230px;
+    padding: 1rem;
+  }
 }

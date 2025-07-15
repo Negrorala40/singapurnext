@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useEffect, useRef } from 'react';
 import './Cart.css';
 import { useRouter } from 'next/navigation';
@@ -11,6 +12,7 @@ interface CartItem {
   size: string;
   color: string;
   quantity: number;
+  stock?: number;
 }
 
 interface CartProps {
@@ -21,13 +23,16 @@ interface CartProps {
 
 const API_URL = 'http://localhost:8082/api/cart';
 
+// ✅ Formateador para precios (ej: 59900 → 59.900)
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(price);
+
 const Cart: React.FC<CartProps> = ({ cartItems, setCartItems, onClose }) => {
   const cartRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
   const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
-  // Cerrar al hacer clic fuera del carrito
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (cartRef.current && !cartRef.current.contains(event.target as Node)) {
@@ -38,7 +43,6 @@ const Cart: React.FC<CartProps> = ({ cartItems, setCartItems, onClose }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
 
-  // Cargar carrito desde backend
   useEffect(() => {
     const fetchCart = async () => {
       const token = localStorage.getItem('token');
@@ -56,13 +60,14 @@ const Cart: React.FC<CartProps> = ({ cartItems, setCartItems, onClose }) => {
         const data = await res.json();
 
         const transformedItems: CartItem[] = data.map((item: any) => ({
-          id: item.id,
-          image: item.images?.[0] || '/placeholder.png', // ✅ Manejo seguro de imagen
+          id: item.id.toString(),
+          image: item.imageUrls?.[0] || '/placeholder.png',
           name: item.productName,
           price: item.price,
           size: item.size,
           color: item.color,
           quantity: item.quantity,
+          stock: item.stock || 100,
         }));
 
         setCartItems(transformedItems);
@@ -74,9 +79,16 @@ const Cart: React.FC<CartProps> = ({ cartItems, setCartItems, onClose }) => {
     fetchCart();
   }, []);
 
-  // Actualizar cantidad
   const updateQuantity = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
+
+    const item = cartItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (item.stock && newQuantity > item.stock) {
+      alert(`No hay suficiente stock disponible (máximo ${item.stock})`);
+      return;
+    }
 
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -101,7 +113,6 @@ const Cart: React.FC<CartProps> = ({ cartItems, setCartItems, onClose }) => {
     }
   };
 
-  // Eliminar producto
   const removeItem = async (itemId: string) => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -125,50 +136,60 @@ const Cart: React.FC<CartProps> = ({ cartItems, setCartItems, onClose }) => {
   };
 
   return (
-    <div className="cart-overlay">
-      <div ref={cartRef} className="cart-container">
-        <button className="close-btn" onClick={onClose}>X</button>
+    <div ref={cartRef} className="cart-panel open">
+      <div className="cart-header">
         <h2>Tu carrito 🚀</h2>
-
-        {cartItems.length === 0 ? (
-          <p className="empty-message">Tu carrito está vacío.</p>
-        ) : (
-          <>
-            <ul className="cart-items">
-              {cartItems.map((item) => (
-                <li key={item.id} className="cart-item">
-                  <img src={item.image} alt={item.name} />
-                  <div>
-                    <p>{item.name}</p>
-                    <p>Talla: {item.size}</p>
-                    <p>Color: {item.color}</p>
-                    <p>${item.price.toFixed(2)}</p>
-                    <div className="quantity-selector">
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
-                      <span>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
-                    </div>
-                  </div>
-                  <button className="btn-remove" onClick={() => removeItem(item.id)}>Eliminar</button>
-                </li>
-              ))}
-            </ul>
-
-            <div className="cart-summary">
-              <p>Total: ${totalPrice.toFixed(2)}</p>
-              <button
-                className="btn-checkout"
-                onClick={() => {
-                  router.push('/checkout');
-                  onClose();
-                }}
-              >
-                Ir a Pagar
-              </button>
-            </div>
-          </>
-        )}
+        <button className="close-btn" onClick={onClose}>✕</button>
       </div>
+
+      {cartItems.length === 0 ? (
+        <p className="empty-message">Tu carrito está vacío.</p>
+      ) : (
+        <>
+          <ul className="cart-items">
+            {cartItems.map((item) => (
+              <li key={item.id} className="cart-item">
+                <img src={item.image} alt={item.name} />
+                <div>
+                  <p>{item.name}</p>
+                  <p>Talla: {item.size}</p>
+                  <p>Color: {item.color}</p>
+                  <p>${formatPrice(item.price)}</p>
+                  <div className="quantity-selector">
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                    >
+                      -
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      disabled={item.stock !== undefined && item.quantity >= item.stock}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <button className="btn-remove" onClick={() => removeItem(item.id)}>Eliminar</button>
+              </li>
+            ))}
+          </ul>
+
+          <div className="cart-summary">
+            <p>Total: ${formatPrice(totalPrice)}</p>
+            <button
+              className="btn-checkout"
+              onClick={() => {
+                router.push('/checkout');
+                onClose();
+              }}
+            >
+              Ir a Pagar
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

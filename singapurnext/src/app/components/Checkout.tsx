@@ -11,7 +11,11 @@ interface CartItem {
   size: string;
   color: string;
   quantity: number;
+  stock?: number;
 }
+
+const API_CART_URL = 'http://localhost:8082/api/cart';
+const API_SIGNATURE_URL = 'http://localhost:8082/api/bold/signature';
 
 const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -19,7 +23,6 @@ const CheckoutPage = () => {
   const [orderId, setOrderId] = useState<string>('');
   const [total, setTotal] = useState<number>(0);
 
-  // 1. Inyectar script de Bold solo una vez
   useEffect(() => {
     const scriptId = 'bold-script';
     if (!document.getElementById(scriptId)) {
@@ -31,28 +34,37 @@ const CheckoutPage = () => {
     }
   }, []);
 
-  // 2. Obtener productos del carrito y firma
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCartAndSignature = async () => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
       try {
-        // Obtener productos
-        const resCart = await fetch('http://localhost:8082/api/cart', {
+        const resCart = await fetch(API_CART_URL, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
-        
-        if (!resCart.ok) throw new Error('Error al obtener el carrito');
-        const cartData = await resCart.json();
-        console.log("🛒 Carrito recibido:", cartData);
-        setCartItems(cartData);
 
-        // Obtener firma segura desde backend
-        const resFirma = await fetch('http://localhost:8082/api/bold/signature', {
+        if (!resCart.ok) throw new Error('Error al obtener el carrito');
+        const data = await resCart.json();
+
+        const items: CartItem[] = data.map((item: any) => ({
+          id: item.id,
+          image: item.imageUrls?.[0] || '/placeholder.png',
+          name: item.productName || item.name,
+          price: item.price,
+          size: item.size,
+          color: item.color,
+          quantity: item.quantity,
+          stock: item.stock || 100,
+        }));
+
+        setCartItems(items);
+        calculateTotal(items);
+
+        const resSignature = await fetch(API_SIGNATURE_URL, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -60,24 +72,83 @@ const CheckoutPage = () => {
           },
         });
 
-        if (!resFirma.ok) throw new Error('Error al obtener firma');
-        const { orderId, signature, amount } = await resFirma.json();
+        if (!resSignature.ok) throw new Error('Error al obtener firma');
+        const { orderId, signature, amount } = await resSignature.json();
 
         setOrderId(orderId);
         setSignature(signature);
         setTotal(amount);
-
-        console.log('🧾 Firma recibida:', { orderId, signature, amount });
-
       } catch (err) {
         console.error('❌ Error en Checkout:', err);
       }
     };
 
-    fetchData();
+    fetchCartAndSignature();
   }, []);
 
-  // 3. Montar botón Bold
+  const calculateTotal = (items: CartItem[]) => {
+    const newTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    setTotal(newTotal);
+  };
+
+  const updateQuantity = async (itemId: string, newQuantity: number) => {
+    if (newQuantity < 1) return;
+
+    const item = cartItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (item.stock && newQuantity > item.stock) {
+      alert(`No hay suficiente stock disponible (máximo ${item.stock})`);
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${API_CART_URL}/update/${itemId}?quantity=${newQuantity}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) throw new Error('Error actualizando cantidad');
+
+      const updatedItems = cartItems.map(item =>
+        item.id === itemId ? { ...item, quantity: newQuantity } : item
+      );
+      setCartItems(updatedItems);
+      calculateTotal(updatedItems);
+    } catch (err) {
+      console.error('🛑 Error actualizando cantidad:', err);
+    }
+  };
+
+  const removeItem = async (itemId: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${API_CART_URL}/remove/${itemId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) throw new Error('Error eliminando el producto');
+
+      const updatedItems = cartItems.filter(item => item.id !== itemId);
+      setCartItems(updatedItems);
+      calculateTotal(updatedItems);
+    } catch (err) {
+      console.error('🛑 Error eliminando producto:', err);
+    }
+  };
+
   useEffect(() => {
     if (!signature || !orderId || total === 0) return;
 
@@ -93,8 +164,6 @@ const CheckoutPage = () => {
       script.setAttribute('data-redirection-url', 'http://localhost:3000/checkout/success');
       script.setAttribute('data-description', 'Compra desde tienda');
       script.setAttribute('data-tax', 'vat-19');
-
-      // Opcional: reemplaza con datos reales del usuario
       script.setAttribute('data-customer-data', JSON.stringify({
         email: 'cliente@correo.com',
         fullName: 'Nombre del Cliente',
@@ -103,7 +172,6 @@ const CheckoutPage = () => {
         documentNumber: '123456789',
         documentType: 'CC',
       }));
-
       script.setAttribute('data-billing-address', JSON.stringify({
         address: 'Calle 123 #4-5',
         zipCode: '110111',
@@ -122,20 +190,50 @@ const CheckoutPage = () => {
       <h1>Finalizar compra</h1>
       <div className="checkout-container">
         <div className="checkout-items">
-          {cartItems.map((item) => (
-            <div key={item.id} className="checkout-item">
-              <img src={item.image} alt={item.name} width={80} />
-              <div>
-                <p>{item.name}</p>
-                <p>Talla: {item.size} | Color: {item.color}</p>
-                <p>Cantidad: {item.quantity}</p>
-                <p>Precio: ${item.price.toFixed(2)}</p>
+          {cartItems.length === 0 ? (
+            <p>Tu carrito está vacío.</p>
+          ) : (
+            cartItems.map((item) => (
+              <div key={item.id} className="checkout-item">
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  width={80}
+                  height={80}
+                  style={{ objectFit: 'cover', borderRadius: '8px' }}
+                />
+                <div>
+                  <p><strong>{item.name}</strong></p>
+                  <p>Talla: {item.size} | Color: {item.color}</p>
+                  <p>Precio: ${item.price.toLocaleString('es-CO')}</p>
+                  <div className="quantity-controls">
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                    >
+                      -
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      disabled={item.stock !== undefined && item.quantity >= item.stock}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <button
+                    className="btn-remove"
+                    onClick={() => removeItem(item.id)}
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
         <div className="checkout-summary">
-          <h2>Total: ${total.toFixed(2)}</h2>
+          <h2>Total: ${total.toLocaleString('es-CO')}</h2>
           <div id="bold-button-container" />
         </div>
       </div>

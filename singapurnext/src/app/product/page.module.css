@@ -1,3 +1,31 @@
+.size-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.size-button {
+  padding: 10px 16px;
+  font-size: 16px;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 50px;
+  text-align: center;
+}
+
+.size-button:hover {
+  border-color: #007bff;
+}
+
+.size-button.selected {
+  border-color: #178282;
+  background-color: #178282;
+  color: white;
+  font-weight: bold;
+}
 
 .product {
     display: flex;
