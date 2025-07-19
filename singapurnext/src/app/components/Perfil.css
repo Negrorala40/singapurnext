@@ -86,3 +86,27 @@ input {
 .edit-fields input {
   margin-bottom: 0.5rem;
 }
+
+/* ✅ Éxito flotante tipo "checkmark" */
+.checkmark-popup {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #02f9a6;
+  color: #10345c;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  box-shadow: 0 0 10px #02f9a6;
+  z-index: 9999;
+  animation: fadeout 2s ease forwards;
+}
+
+/* ✅ Animación para desaparecer */
+@keyframes fadeout {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}

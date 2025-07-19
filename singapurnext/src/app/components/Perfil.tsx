@@ -17,10 +17,10 @@ interface User {
   lastName: string;
   email: string;
   phone: string;
-  addresses?: Address[];
 }
 
-const API_BASE_URL = 'http://localhost:8082/api/users';
+const USER_API_URL = 'http://localhost:8082/api/users';
+const ADDRESS_API_URL = 'http://localhost:8082/api/addresses';
 
 const Perfil = () => {
   const [formData, setFormData] = useState<User>({
@@ -29,7 +29,6 @@ const Perfil = () => {
     lastName: '',
     email: '',
     phone: '',
-    addresses: [],
   });
 
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -46,6 +45,7 @@ const Perfil = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showCheckmark, setShowCheckmark] = useState<boolean>(false); // ✅ NUEVO
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const authHeaders = {
@@ -56,16 +56,15 @@ const Perfil = () => {
   const loadUserData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/me`, {
+      const response = await fetch(`${USER_API_URL}/me`, {
         method: 'GET',
         headers: authHeaders,
       });
 
-      if (!response.ok) throw new Error('Error al cargar los datos');
+      if (!response.ok) throw new Error('Error al cargar los datos del usuario');
 
       const userData: User = await response.json();
       setFormData(userData);
-      setAddresses(userData.addresses || []);
       setError(null);
     } catch (err) {
       setError('Error al cargar los datos del usuario');
@@ -75,13 +74,42 @@ const Perfil = () => {
     }
   };
 
+  const loadAddresses = async () => {
+    try {
+      const response = await fetch(ADDRESS_API_URL, {
+        method: 'GET',
+        headers: authHeaders,
+      });
+
+      if (!response.ok) throw new Error('Error al cargar direcciones');
+
+      const text = await response.text();
+      const addressList: Address[] = text ? JSON.parse(text) : [];
+
+      setAddresses(addressList);
+    } catch (err) {
+      setError('Error al cargar direcciones');
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     loadUserData();
+    loadAddresses();
   }, []);
+
+  const showSuccessCheckmark = (message: string) => {
+    setSuccess(message);
+    setShowCheckmark(true);
+    setTimeout(() => {
+      setShowCheckmark(false);
+      setSuccess(null);
+    }, 2000);
+  };
 
   const handleAddAddress = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/me/addresses`, {
+      const response = await fetch(ADDRESS_API_URL, {
         method: 'POST',
         headers: authHeaders,
         body: JSON.stringify(newAddress),
@@ -90,8 +118,8 @@ const Perfil = () => {
       if (!response.ok) throw new Error('Error al agregar la dirección');
 
       setNewAddress({ address: '', city: '', state: '', country: '' });
-      await loadUserData();
-      setSuccess('Dirección agregada correctamente');
+      await loadAddresses();
+      showSuccessCheckmark('Dirección agregada correctamente');
     } catch (err) {
       setError('Error al agregar la dirección');
       console.error(err);
@@ -99,16 +127,19 @@ const Perfil = () => {
   };
 
   const handleDeleteAddress = async (addressId: number) => {
+    const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar esta dirección?');
+    if (!confirmDelete) return;
+
     try {
-      const response = await fetch(`${API_BASE_URL}/me/addresses/${addressId}`, {
+      const response = await fetch(`${ADDRESS_API_URL}/${addressId}`, {
         method: 'DELETE',
         headers: authHeaders,
       });
 
       if (!response.ok) throw new Error('Error al eliminar la dirección');
 
-      await loadUserData();
-      setSuccess('Dirección eliminada correctamente');
+      await loadAddresses();
+      showSuccessCheckmark('Dirección eliminada correctamente');
     } catch (err) {
       setError('Error al eliminar la dirección');
       console.error(err);
@@ -122,8 +153,12 @@ const Perfil = () => {
 
   const handleSaveAddress = async () => {
     if (!editedAddress) return;
+
+    const confirmUpdate = window.confirm('¿Guardar cambios en la dirección?');
+    if (!confirmUpdate) return;
+
     try {
-      const response = await fetch(`${API_BASE_URL}/me/addresses/${editedAddress.id}`, {
+      const response = await fetch(`${ADDRESS_API_URL}/${editedAddress.id}`, {
         method: 'PUT',
         headers: authHeaders,
         body: JSON.stringify(editedAddress),
@@ -133,8 +168,8 @@ const Perfil = () => {
 
       setEditIndex(null);
       setEditedAddress(null);
-      await loadUserData();
-      setSuccess('Dirección actualizada correctamente');
+      await loadAddresses();
+      showSuccessCheckmark('Dirección actualizada correctamente');
     } catch (err) {
       setError('Error al actualizar la dirección');
       console.error(err);
@@ -143,13 +178,16 @@ const Perfil = () => {
 
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    const confirmUpdate = window.confirm('¿Deseas guardar los cambios en tu perfil?');
+    if (!confirmUpdate) return;
+
     try {
       const payload = {
         ...formData,
         password: '',
       };
 
-      const response = await fetch(`${API_BASE_URL}/me`, {
+      const response = await fetch(`${USER_API_URL}/me`, {
         method: 'PUT',
         headers: authHeaders,
         body: JSON.stringify(payload),
@@ -159,8 +197,7 @@ const Perfil = () => {
 
       const updatedUser = await response.json();
       setFormData(updatedUser);
-      setSuccess('Perfil actualizado correctamente');
-      setError(null);
+      showSuccessCheckmark('Perfil actualizado correctamente');
     } catch (err) {
       setError('Error al actualizar los datos del usuario');
       console.error(err);
@@ -171,11 +208,14 @@ const Perfil = () => {
 
   return (
     <div className="perfil-container">
+      {showCheckmark && <div className="checkmark-popup">✅</div>} {/* ✅ NUEVO */}
+
       <h1>🚀 Bienvenido a tu Perfil en <span className="highlight">A Marte</span> 🪐</h1>
 
       {error && <div className="error-message">{error}</div>}
       {success && <div className="success-message">{success}</div>}
 
+      {/* Información del Usuario */}
       <section className="info-section">
         <h2>👩‍🚀 Información Personal</h2>
         <form onSubmit={handleUpdateUser}>
@@ -215,6 +255,7 @@ const Perfil = () => {
         </form>
       </section>
 
+      {/* Direcciones */}
       <section className="address-section">
         <h2>📦 Direcciones de Envío</h2>
         {addresses.length > 0 ? (
@@ -282,7 +323,7 @@ const Perfil = () => {
           />
           <input
             type="text"
-            placeholder="Departamento"
+            placeholder="Estado"
             value={newAddress.state}
             onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
           />
@@ -292,7 +333,7 @@ const Perfil = () => {
             value={newAddress.country}
             onChange={(e) => setNewAddress({ ...newAddress, country: e.target.value })}
           />
-          <button onClick={handleAddAddress} className="add-button">Agregar dirección</button>
+          <button onClick={handleAddAddress} className="add-button">Agregar Dirección</button>
         </div>
       </section>
     </div>
