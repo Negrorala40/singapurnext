@@ -8,16 +8,16 @@
 
 h1 {
   color: #02f9a6;
-  font-size: 2rem;
-  margin-bottom: 2rem;
   text-align: center;
+  margin-bottom: 2rem;
 }
 
 .highlight {
   color: #ffeb3b;
 }
 
-.info-section, .address-section {
+.info-section,
+.address-section {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 15px;
   padding: 1.5rem;
@@ -25,40 +25,64 @@ h1 {
   box-shadow: 0 0 10px #02f9a6;
 }
 
+.form-group {
+  margin-bottom: 1rem;
+}
+
+input {
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: none;
+  margin-top: 0.3rem;
+}
+
+.update-button,
+.add-button,
+.edit-button,
+.delete-button,
+.save-button,
+.cancel-button {
+  margin-top: 1rem;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+}
+
+.update-button,
+.add-button,
+.edit-button,
+.save-button {
+  background: #02f9a6;
+  color: #10345c;
+}
+
+.cancel-button,
+.delete-button {
+  background: #ff5c5c;
+  color: white;
+}
+
+.address-list {
+  list-style: none;
+  padding: 0;
+}
+
 .address-item {
   background: #012a4a;
   padding: 1rem;
-  margin-bottom: 1rem;
   border-radius: 10px;
-  position: relative;
+  margin-bottom: 1rem;
 }
 
-.address-item button {
-  background: #02f9a6;
-  border: none;
-  padding: 0.5rem 1rem;
-  color: #10345c;
-  font-weight: bold;
-  border-radius: 8px;
-  cursor: pointer;
+.address-actions {
+  display: flex;
+  gap: 0.5rem;
   margin-top: 0.5rem;
 }
 
-.new-address-form input {
-  display: block;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  width: 100%;
-  border-radius: 8px;
-  border: none;
-}
-
-.new-address-form button {
-  background: #02f9a6;
-  border: none;
-  padding: 0.6rem 1rem;
-  font-weight: bold;
-  color: #10345c;
-  border-radius: 10px;
-  cursor: pointer;
+.edit-fields input {
+  margin-bottom: 0.5rem;
 }
